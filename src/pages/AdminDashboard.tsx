@@ -10920,13 +10920,25 @@ export default function AdminDashboard() {
                         <Copy className="h-3 w-3 text-muted-foreground group-hover/copy:text-accent shrink-0 transition-colors" />
                         <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
                       </button>
-                      <button
-                        onClick={() => copyToClipboard(acc.account_password, "Passwort")}
-                        className="w-full flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors group/copy text-left"
-                      >
-                        <Copy className="h-3 w-3 text-muted-foreground group-hover/copy:text-accent shrink-0 transition-colors" />
-                        <span className="text-[11px] text-muted-foreground truncate">PW: {acc.account_password}</span>
-                      </button>
+                      <div className="w-full flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors">
+                        <button
+                          onClick={() => copyToClipboard(acc.account_password, "Passwort")}
+                          className="flex-1 min-w-0 flex items-center gap-2 text-left group/copy"
+                        >
+                          <Copy className="h-3 w-3 text-muted-foreground group-hover/copy:text-accent shrink-0 transition-colors" />
+                          <span className="text-[11px] text-muted-foreground truncate">
+                            PW: {revealedPw[acc.id] ? acc.account_password : "••••••••"}
+                          </span>
+                        </button>
+                        <button
+                          onClick={() => setRevealedPw((p) => ({ ...p, [acc.id]: !p[acc.id] }))}
+                          className="shrink-0 p-1 rounded-md text-muted-foreground hover:text-accent transition-colors"
+                          aria-label="Passwort anzeigen"
+                        >
+                          {revealedPw[acc.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                        </button>
+                      </div>
+
                       {acc.drive_folder_id && (
                         <a
                           href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`}
