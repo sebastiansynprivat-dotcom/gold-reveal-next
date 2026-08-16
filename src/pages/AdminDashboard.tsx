@@ -6619,42 +6619,77 @@ export default function AdminDashboard() {
                                                   >
                                                     ↗ {acc.account_domain}
                                                   </a>
-                                                )}
-                                              </div>
-                                            </div>
+                                                 )}
+                                               </div>
+                                               {assignedDates[`${chatter.user_id}-${acc.id}`] && (
+                                                 <span className="text-[10px] text-muted-foreground shrink-0">
+                                                   Zugewiesen {assignedDates[`${chatter.user_id}-${acc.id}`]}
+                                                 </span>
+                                               )}
+                                             </div>
 
-                                            {/* Login Row */}
-                                            <div className="px-3.5 py-2 flex gap-2">
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  navigator.clipboard.writeText(acc.account_email);
-                                                  toast.success("E-Mail kopiert!");
-                                                }}
-                                                className="flex-1 text-left bg-secondary/30 rounded-lg px-3 py-2 hover:bg-secondary/50 transition-colors cursor-copy group"
-                                              >
-                                                <p className="text-[9px] text-muted-foreground mb-0.5">E-Mail</p>
-                                                <p className="text-xs font-medium text-foreground truncate group-active:scale-95 transition-transform">
-                                                  {acc.account_email}
-                                                </p>
-                                              </button>
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  navigator.clipboard.writeText(acc.account_password);
-                                                  toast.success("Passwort kopiert!");
-                                                }}
-                                                className="flex-1 text-left bg-secondary/30 rounded-lg px-3 py-2 hover:bg-secondary/50 transition-colors cursor-copy group"
-                                              >
-                                                <p className="text-[9px] text-muted-foreground mb-0.5">Passwort</p>
-                                                <p className="text-xs font-medium text-foreground truncate group-active:scale-95 transition-transform">
-                                                  {acc.account_password}
-                                                </p>
-                                              </button>
-                                            </div>
+                                             {/* Login Row */}
+                                             <div className="px-3.5 py-2 flex gap-2">
+                                               <button
+                                                 onClick={(e) => {
+                                                   e.stopPropagation();
+                                                   navigator.clipboard.writeText(acc.account_email);
+                                                   toast.success("E-Mail kopiert!");
+                                                 }}
+                                                 className="flex-1 text-left bg-secondary/30 rounded-lg px-3 py-2 hover:bg-secondary/50 transition-colors cursor-copy group"
+                                               >
+                                                 <p className="text-[9px] text-muted-foreground mb-0.5">E-Mail</p>
+                                                 <p className="text-xs font-medium text-foreground truncate group-active:scale-95 transition-transform">
+                                                   {acc.account_email}
+                                                 </p>
+                                               </button>
+                                               <div className="flex-1 flex items-center gap-1 bg-secondary/30 rounded-lg px-3 py-2 hover:bg-secondary/50 transition-colors">
+                                                 <button
+                                                   onClick={(e) => {
+                                                     e.stopPropagation();
+                                                     navigator.clipboard.writeText(acc.account_password);
+                                                     toast.success("Passwort kopiert!");
+                                                   }}
+                                                   className="flex-1 min-w-0 text-left cursor-copy group"
+                                                 >
+                                                   <p className="text-[9px] text-muted-foreground mb-0.5">Passwort</p>
+                                                   <p className="text-xs font-medium text-foreground truncate group-active:scale-95 transition-transform">
+                                                     {revealedPw[`${chatter.user_id}-${acc.id}`]
+                                                       ? acc.account_password
+                                                       : "••••••••"}
+                                                   </p>
+                                                 </button>
+                                                 <button
+                                                   onClick={(e) => {
+                                                     e.stopPropagation();
+                                                     const k = `${chatter.user_id}-${acc.id}`;
+                                                     setRevealedPw((p) => ({ ...p, [k]: !p[k] }));
+                                                   }}
+                                                   className="shrink-0 p-1 rounded-md text-muted-foreground hover:text-accent transition-colors"
+                                                   aria-label="Passwort anzeigen"
+                                                 >
+                                                   {revealedPw[`${chatter.user_id}-${acc.id}`] ? (
+                                                     <EyeOff className="h-3.5 w-3.5" />
+                                                   ) : (
+                                                     <Eye className="h-3.5 w-3.5" />
+                                                   )}
+                                                 </button>
+                                               </div>
+                                             </div>
 
-                                            {/* Real Stats from accounts_data */}
-                                            <AccountStatsRows accountId={acc.id} userId={chatter.user_id} />
+                                             {/* Real Stats from accounts_data */}
+                                             <AccountStatsRows
+                                               accountId={acc.id}
+                                               userId={chatter.user_id}
+                                               onAssignedDate={(d) =>
+                                                 setAssignedDates((prev) => {
+                                                   const k = `${chatter.user_id}-${acc.id}`;
+                                                   if (!d || prev[k] === d) return prev;
+                                                   return { ...prev, [k]: d };
+                                                 })
+                                               }
+                                             />
+
                                           </div>
                                         );
                                       })}
