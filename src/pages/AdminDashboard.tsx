@@ -1415,6 +1415,8 @@ export default function AdminDashboard() {
   const [summaryLoading, setSummaryLoading] = useState<Record<string, boolean>>({});
   const [showAiSummaries, setShowAiSummaries] = useState(false);
   const [generatingAll, setGeneratingAll] = useState(false);
+  const [revealedPw, setRevealedPw] = useState<Record<string, boolean>>({});
+  const [assignedDates, setAssignedDates] = useState<Record<string, string>>({});
 
   // KI Prompt state (Dashboard Chat)
   const [kiPrompt, setKiPrompt] = useState("");
