@@ -62,6 +62,7 @@ import {
   MessageCircle,
   FileBarChart,
   Eye,
+  EyeOff,
   Zap,
 } from "lucide-react";
 import ChatterReportsTab from "@/components/admin/ChatterReportsTab";
