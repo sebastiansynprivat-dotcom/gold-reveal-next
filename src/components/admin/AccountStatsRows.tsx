@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface Props {
   accountId: string;
   userId: string;
+  onAssignedDate?: (date: string | null) => void;
 }
 
 interface Stats {
