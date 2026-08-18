@@ -2737,6 +2737,10 @@ export default function AdminDashboard() {
       const assigned = Array.from(accountIds)
         .map((id) => accountById.get(id))
         .filter(Boolean) as AccountEntry[];
+      const former = [
+        ...(userId ? formerByUser.get(userId) || [] : []),
+        ...(formerByProfile.get(profileId) || []),
+      ].filter((f) => !accountIds.has(f.account_id));
       return {
         ...c,
         user_id: userId,
@@ -2745,6 +2749,7 @@ export default function AdminDashboard() {
         pre_create: isPre,
         group_name: cleanDisplayName(c.group_name || ""),
         assigned_accounts: assigned,
+        former_assignments: former,
       };
     });
     setChatters(enriched);
