@@ -3404,6 +3404,20 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_account_chatter_stats: {
+        Args: { p_account_id: string; p_user_id: string }
+        Returns: {
+          all_time: number
+          assigned_since: string
+          mass_dms: number
+          month: number
+          oldest_chat: number
+          open_chats: number
+          today: number
+          week: number
+          yesterday: number
+        }[]
+      }
       get_brezzels_comment_targets: {
         Args: { p_count?: number }
         Returns: {
