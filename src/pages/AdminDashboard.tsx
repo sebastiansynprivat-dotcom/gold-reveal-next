@@ -108,6 +108,7 @@ import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import ChatterStatsCard from "@/components/ChatterStatsCard";
 import AccountStatsRows from "@/components/admin/AccountStatsRows";
+import FormerAssignmentCard from "@/components/admin/FormerAssignmentCard";
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import ModelDashboardTab from "@/components/ModelDashboardTab";
 import ChatterDashboardTab from "@/components/ChatterDashboardTab";
@@ -226,8 +227,19 @@ interface ChatterProfile {
   account_password?: string;
   account_domain?: string;
   assigned_accounts?: AccountEntry[];
+  former_assignments?: FormerAssignment[];
   language?: string;
   ui_language?: string;
+}
+
+interface FormerAssignment {
+  key: string;
+  account_id: string;
+  start_date: string;
+  end_date: string;
+  platform: string;
+  account_domain?: string | null;
+  account_email?: string | null;
 }
 
 interface AccountEntry {
@@ -921,6 +933,7 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
+  const [expandedFormer, setExpandedFormer] = useState<Record<string, boolean>>({});
   const [activeTab, setActiveTab] = useState<string>(() => {
     if (typeof window === "undefined") return "einnahmen";
     const t = new URLSearchParams(window.location.search).get("tab");
@@ -2662,6 +2675,46 @@ export default function AdminDashboard() {
     });
     const accountById = new Map(accs.map((a) => [a.id, a]));
 
+    // Fetch closed (former) assignments – paged, can exceed 1000 rows
+    const closedRows: any[] = [];
+    for (let page = 0; page < 50; page++) {
+      const from = page * 1000;
+      const { data: chunk, error: closedErr } = await supabase
+        .from("account_assignments")
+        .select("account_id, user_id, profile_id, start_date, end_date")
+        .not("end_date", "is", null)
+        .order("end_date", { ascending: false })
+        .range(from, from + 999);
+      if (closedErr) break;
+      const list = chunk || [];
+      closedRows.push(...list);
+      if (list.length < 1000) break;
+    }
+    const formerByUser = new Map<string, FormerAssignment[]>();
+    const formerByProfile = new Map<string, FormerAssignment[]>();
+    closedRows.forEach((a: any, idx: number) => {
+      const acc = accountById.get(a.account_id);
+      const entry: FormerAssignment = {
+        key: `${a.account_id}-${a.start_date}-${a.end_date}-${idx}`,
+        account_id: a.account_id,
+        start_date: a.start_date,
+        end_date: a.end_date,
+        platform: acc?.platform || "Account entfernt",
+        account_domain: acc?.account_domain || null,
+        account_email: acc?.account_email || null,
+      };
+      if (a.user_id) {
+        const arr = formerByUser.get(a.user_id) || [];
+        arr.push(entry);
+        formerByUser.set(a.user_id, arr);
+      } else if (a.profile_id) {
+        const arr = formerByProfile.get(a.profile_id) || [];
+        arr.push(entry);
+        formerByProfile.set(a.profile_id, arr);
+      }
+    });
+
+
     // Ensure modelNames map is populated for the chatter list
     const modelIds = [...new Set(accs.map((a) => a.model_id).filter(Boolean))] as string[];
     if (modelIds.length > 0) {
@@ -2686,6 +2739,10 @@ export default function AdminDashboard() {
       const assigned = Array.from(accountIds)
         .map((id) => accountById.get(id))
         .filter(Boolean) as AccountEntry[];
+      const former = [
+        ...(userId ? formerByUser.get(userId) || [] : []),
+        ...(formerByProfile.get(profileId) || []),
+      ].filter((f) => !accountIds.has(f.account_id));
       return {
         ...c,
         user_id: userId,
@@ -2694,6 +2751,7 @@ export default function AdminDashboard() {
         pre_create: isPre,
         group_name: cleanDisplayName(c.group_name || ""),
         assigned_accounts: assigned,
+        former_assignments: former,
       };
     });
     setChatters(enriched);
@@ -6697,6 +6755,46 @@ export default function AdminDashboard() {
                                   ) : (
                                     /* No accounts: just stats */
                                     <ChatterStatsCard userId={chatter.user_id || chatter.id} name={chatter.group_name || "Chatter"} stats={chatterRealStats[chatter.rowKey]} />
+                                  )}
+
+                                  {/* Former assignments */}
+                                  {(chatter.former_assignments?.length || 0) > 0 && (
+                                    <div className="mt-3">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setExpandedFormer((prev) => ({
+                                            ...prev,
+                                            [chatter.rowKey]: !prev[chatter.rowKey],
+                                          }));
+                                        }}
+                                        className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+                                      >
+                                        <ChevronRight
+                                          className={cn(
+                                            "h-3 w-3 transition-transform",
+                                            expandedFormer[chatter.rowKey] && "rotate-90",
+                                          )}
+                                        />
+                                        Frühere Zuweisungen ({chatter.former_assignments!.length})
+                                      </button>
+                                      {expandedFormer[chatter.rowKey] && (
+                                        <div className="mt-2 space-y-2 animate-in fade-in duration-200">
+                                          {chatter.former_assignments!.map((fa) => (
+                                            <FormerAssignmentCard
+                                              key={fa.key}
+                                              accountId={fa.account_id}
+                                              userId={chatter.user_id || chatter.id}
+                                              platform={fa.platform}
+                                              accountDomain={fa.account_domain}
+                                              accountEmail={fa.account_email}
+                                              startDate={fa.start_date}
+                                              endDate={fa.end_date}
+                                            />
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               )}

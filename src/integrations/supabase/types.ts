@@ -3418,6 +3418,22 @@ export type Database = {
           yesterday: number
         }[]
       }
+      get_account_chatter_stats_window: {
+        Args: {
+          p_account_id: string
+          p_end: string
+          p_start: string
+          p_user_id: string
+        }
+        Returns: {
+          avg_per_day: number
+          days: number
+          mass_dms: number
+          oldest_chat: number
+          series: Json
+          total: number
+        }[]
+      }
       get_brezzels_comment_targets: {
         Args: { p_count?: number }
         Returns: {
