@@ -7,7 +7,7 @@ The card sums only the days on which **this** chatter was assigned to **this** a
 So the equal values aren't a data bug — but three real defects make the labels misleading:
 
 1. **Today is never counted.** "Monat" and "All-Time" only add days with `date >= monthStart` / any day, but the loop still skips nothing for today — today's row is included only if already ingested; for this account today's row (18.08.) doesn't exist yet, while "Gestern" is the only visible number. Result: All-Time can lag the account's real total by a full day, and there is no "Heute" figure at all.
-2. **Row limit truncation.** The revenue query fetches `accounts_data` without a limit, so the backend caps it at 1000 rows ordered by newest date. One account already has 1004 daily rows, so its oldest days silently drop out of "All-Time". More accounts will cross that line over time.
+2. **All aggregation happens in the browser.** The card fetches every daily row of `accounts_data` for the account and sums it in the component. That also hits the API's 1000-row cap (one account already has 1004 daily rows), silently dropping the oldest days from "All-Time". None of these rows are rendered — only the totals are.
 3. **No indication of scope.** Nothing on the card says the figures are limited to this chatter's assignment period, which is exactly why they read as "false".
 
 ## Changes
