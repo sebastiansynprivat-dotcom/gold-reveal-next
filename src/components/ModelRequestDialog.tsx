@@ -294,11 +294,23 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
               <Send className="h-7 w-7 text-accent-foreground" />
             </motion.div>
             <div className="relative text-left flex-1 min-w-0">
-              <p className="text-lg font-bold text-foreground mb-1">Neue Anfrage erstellen</p>
+              <p className="text-lg font-bold text-foreground mb-1">
+                {lang === "en" ? "Create new request" : "Neue Anfrage erstellen"}
+              </p>
               <p className="text-sm text-muted-foreground leading-snug">
-                Klicke hier, um eine Anfrage an dein <span className="text-accent font-bold">Model</span> zu stellen
+                {lang === "en" ? (
+                  <>Tap here to send a request to your <span className="text-accent font-bold">model</span></>
+                ) : (
+                  <>Klicke hier, um eine Anfrage an dein <span className="text-accent font-bold">Model</span> zu stellen</>
+                )}
+              </p>
+              <p className="text-[11px] text-accent/80 mt-1 leading-snug">
+                {lang === "en"
+                  ? "You can submit as many requests as you like — even while others are still pending."
+                  : "Du kannst beliebig viele Anfragen stellen – auch wenn noch welche offen sind."}
               </p>
             </div>
+
             <ChevronRight className="relative h-5 w-5 text-accent shrink-0 group-hover:translate-x-0.5 transition-transform" />
           </motion.button>
         </DialogTrigger>
