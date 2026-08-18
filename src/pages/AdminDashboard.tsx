@@ -5000,6 +5000,31 @@ export default function AdminDashboard() {
                 }, {} as Record<string, number>);
                 const revenueChartData = rangeData;
 
+                // Zeichenreihenfolge: größte Plattform zuerst (hinten), kleinere darüber
+                const platformRangeTotals = platformKeys.reduce((acc, k) => {
+                  acc[k] = (rangeData as any[]).reduce((s, d) => s + (Number(d[k]) || 0), 0);
+                  return acc;
+                }, {} as Record<string, number>);
+                const platformDrawOrder = [...platformKeys].sort(
+                  (a, b) => (platformRangeTotals[b] || 0) - (platformRangeTotals[a] || 0),
+                );
+
+                // Y-Achse: max. Einzelwert einer Plattform pro Tag (Areas sind NICHT gestapelt)
+                const maxSingleValue = (rangeData as any[]).reduce((max, d) => {
+                  platformKeys.forEach((k) => {
+                    const v = Number(d[k]) || 0;
+                    if (v > max) max = v;
+                  });
+                  return max;
+                }, 0);
+                const niceStep = (() => {
+                  const target = Math.max(maxSingleValue, avgPerDay, 100) / 4;
+                  const steps = [50, 100, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000, 50000];
+                  return steps.find((s) => s >= target) ?? 100000;
+                })();
+                const yMax = Math.ceil(Math.max(maxSingleValue, avgPerDay, 100) / niceStep) * niceStep;
+                const yTicks = Array.from({ length: Math.round(yMax / niceStep) + 1 }, (_, i) => i * niceStep);
+
                 return (
                 <motion.div
                   initial="hidden"
