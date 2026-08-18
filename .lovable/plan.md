@@ -14,13 +14,11 @@ So the equal values aren't a data bug — but three real defects make the labels
 
 - Label the block so the scope is explicit: a small header such as `Umsatz (seit Zuweisung 17.08.2026)` above the four revenue rows, and add a `Heute` row so today's ingested revenue is visible.
 - Make All-Time and Monat include today explicitly (they already do arithmetically once today's row exists; add `Heute` so a missing ingest is obvious rather than looking like wrong totals).
-- Remove the row cap risk: request `accounts_data` with an explicit high limit / date-range filter (`date >= earliest assignment start`) instead of an unbounded newest-first select, so the assignment window is always fully covered.
+- Move the math to the backend: a single database function returns the finished totals (Heute, Gestern, Woche, Monat, All-Time) plus the latest Mass-DMs / offene Chats / ältester Chat and the assignment start date, already scoped to this chatter's assignment windows. The card just renders those numbers — no row lists in the browser, no row-cap truncation.
 - Optional toggle (only if you want it): a small switch to show account-lifetime totals (all chatters) next to the assignment-scoped totals, for accounts where you want the full history.
 
 ## Technical notes
 
-All in `src/components/admin/AccountStatsRows.tsx`:
-- Compute `earliestStart` from the fetched `account_assignments` rows and add `.gte("date", earliestStart)` plus `.limit(5000)` to the `accounts_data` query.
-- Add `today` accumulator (`row.date === todayISO`) and render a `Heute` row.
-- Render the scope header from the latest assignment `start_date` already reported via `onAssignedDate`.
-No database or RPC changes needed.
+- New security-definer RPC `get_account_chatter_stats(p_account_id uuid, p_user_id uuid)` in the database: joins `accounts_data` against `account_assignments` windows for that user+account (`date between start_date and coalesce(end_date, current_date)`), returns one row with `today, yesterday, week, month, all_time, mass_dms, open_chats, oldest_chat, assigned_since`. Latest-day metrics taken from the newest qualifying row. Execute granted to `authenticated`, with the same admin/access check the account views already use (`can_access_account`).
+- `src/components/admin/AccountStatsRows.tsx`: replace the two client queries with one `supabase.rpc("get_account_chatter_stats", ...)` call, render a `Heute` row and the `Umsatz (seit Zuweisung …)` header, and report `assigned_since` through the existing `onAssignedDate` callback.
+
