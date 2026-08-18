@@ -932,6 +932,7 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
+  const [expandedFormer, setExpandedFormer] = useState<Record<string, boolean>>({});
   const [activeTab, setActiveTab] = useState<string>(() => {
     if (typeof window === "undefined") return "einnahmen";
     const t = new URLSearchParams(window.location.search).get("tab");
