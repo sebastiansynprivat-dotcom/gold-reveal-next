@@ -8,6 +8,7 @@ interface Props {
 }
 
 interface Stats {
+  today: number;
   yesterday: number;
   week: number;
   month: number;
@@ -15,9 +16,16 @@ interface Stats {
   massDMs: number | null;
   openChats: number | null;
   oldestChat: number | null;
+  assignedSince: string | null;
 }
 
-const fmt = (n: number) => n.toLocaleString("de-DE");
+const fmt = (n: number) => Math.round(n).toLocaleString("de-DE");
+
+const fmtDate = (iso: string | null) => {
+  if (!iso) return null;
+  const [y, m, d] = String(iso).slice(0, 10).split("-");
+  return `${d}.${m}.${y}`;
+};
 
 export default function AccountStatsRows({ accountId, userId, onAssignedDate }: Props) {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -28,97 +36,39 @@ export default function AccountStatsRows({ accountId, userId, onAssignedDate }: 
     (async () => {
       setLoading(true);
 
-      // Fetch all assignment windows for this user+account (an account may be re-assigned multiple times)
-      const { data: assignments } = await supabase
-        .from("account_assignments")
-        .select("start_date,end_date")
-        .eq("account_id", accountId)
-        .eq("user_id", userId);
+      // All aggregation happens server-side (scoped to this chatter's assignment windows)
+      const { data, error } = await supabase.rpc("get_account_chatter_stats", {
+        p_account_id: accountId,
+        p_user_id: userId,
+      });
 
       if (cancelled) return;
 
-      // Report the most recent assignment start date (dd.MM.yyyy)
-      if (onAssignedDate) {
-        const starts = (assignments || [])
-          .map((a: any) => a.start_date)
-          .filter(Boolean)
-          .sort();
-        const latest = starts[starts.length - 1];
-        if (latest) {
-          const [y, m, d] = String(latest).slice(0, 10).split("-");
-          onAssignedDate(`${d}.${m}.${y}`);
-        } else {
-          onAssignedDate(null);
-        }
-      }
+      const r: any = Array.isArray(data) ? data[0] : data;
 
-      if (!assignments || assignments.length === 0) {
-        setStats({ yesterday: 0, week: 0, month: 0, allTime: 0, massDMs: null, openChats: null, oldestChat: null });
+      if (error || !r) {
+        onAssignedDate?.(null);
+        setStats({
+          today: 0, yesterday: 0, week: 0, month: 0, allTime: 0,
+          massDMs: null, openChats: null, oldestChat: null, assignedSince: null,
+        });
         setLoading(false);
         return;
       }
 
-
-      const today = new Date();
-      const iso = (d: Date) => d.toISOString().slice(0, 10);
-      const todayISO = iso(today);
-      const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
-      const weekStart = new Date(today); weekStart.setDate(today.getDate() - 6);
-      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-      const yISO = iso(yesterday);
-      const wISO = iso(weekStart);
-      const mISO = iso(monthStart);
-
-      // Helper: is `date` inside ANY assignment window (start..end|today inclusive)
-      const inAnyWindow = (date: string) => {
-        for (const a of assignments as any[]) {
-          const s = a.start_date;
-          const e = a.end_date || todayISO;
-          if (s && date >= s && date <= e) return true;
-        }
-        return false;
-      };
-
-      const { data, error } = await supabase
-        .from("accounts_data")
-        .select("date,total,mass_dms,unread_chats,oldest_chat")
-        .eq("account_id", accountId)
-        .order("date", { ascending: false });
-
-      if (cancelled) return;
-      if (error || !data) {
-        setStats({ yesterday: 0, week: 0, month: 0, allTime: 0, massDMs: null, openChats: null, oldestChat: null });
-        setLoading(false);
-        return;
-      }
-
-      let yesterdayRev = 0, weekRev = 0, monthRev = 0, allTime = 0;
-      let massDMs = 0, openChats = 0, oldestChat = 0;
-      let latestDate = "";
-
-      for (const row of data as any[]) {
-        if (!inAnyWindow(row.date)) continue;
-        const t = Number(row.total || 0);
-        allTime += t;
-        if (row.date >= mISO) monthRev += t;
-        if (row.date >= wISO) weekRev += t;
-        if (row.date === yISO) yesterdayRev += t;
-        if (!latestDate || row.date > latestDate) {
-          latestDate = row.date;
-          massDMs = Number(row.mass_dms || 0);
-          openChats = Number(row.unread_chats || 0);
-          oldestChat = Number(row.oldest_chat || 0);
-        }
-      }
+      const assignedSince = r.assigned_since ? String(r.assigned_since).slice(0, 10) : null;
+      onAssignedDate?.(fmtDate(assignedSince));
 
       setStats({
-        yesterday: Math.round(yesterdayRev),
-        week: Math.round(weekRev),
-        month: Math.round(monthRev),
-        allTime: Math.round(allTime),
-        massDMs,
-        openChats,
-        oldestChat,
+        today: Number(r.today || 0),
+        yesterday: Number(r.yesterday || 0),
+        week: Number(r.week || 0),
+        month: Number(r.month || 0),
+        allTime: Number(r.all_time || 0),
+        massDMs: r.mass_dms === null ? null : Number(r.mass_dms),
+        openChats: r.open_chats === null ? null : Number(r.open_chats),
+        oldestChat: r.oldest_chat === null ? null : Number(r.oldest_chat),
+        assignedSince,
       });
       setLoading(false);
     })();
@@ -128,16 +78,22 @@ export default function AccountStatsRows({ accountId, userId, onAssignedDate }: 
   if (loading || !stats) {
     return (
       <div className="px-3.5 pb-3 pt-1 space-y-1.5 animate-pulse">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="h-4 bg-muted/30 rounded" />
         ))}
       </div>
     );
   }
 
+  const since = fmtDate(stats.assignedSince);
+
   return (
     <div className="px-3.5 pb-3 pt-1 space-y-1.5">
+      <p className="text-[10px] text-muted-foreground px-1">
+        {since ? `Umsatz (seit Zuweisung ${since})` : "Umsatz (keine Zuweisung gefunden)"}
+      </p>
       {[
+        { label: "Heute", value: `${fmt(stats.today)}€` },
         { label: "Gestern", value: `${fmt(stats.yesterday)}€` },
         { label: "Woche", value: `${fmt(stats.week)}€` },
         { label: "Monat", value: `${fmt(stats.month)}€` },
