@@ -108,6 +108,7 @@ import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import ChatterStatsCard from "@/components/ChatterStatsCard";
 import AccountStatsRows from "@/components/admin/AccountStatsRows";
+import FormerAssignmentCard from "@/components/admin/FormerAssignmentCard";
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import ModelDashboardTab from "@/components/ModelDashboardTab";
 import ChatterDashboardTab from "@/components/ChatterDashboardTab";
