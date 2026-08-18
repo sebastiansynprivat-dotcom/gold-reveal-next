@@ -5652,15 +5652,15 @@ export default function AdminDashboard() {
                                  label={{ value: `Ø ${fmtK(avgPerDay)}`, position: "right", fill: "hsl(var(--accent))", fontSize: 9, fontWeight: 700 }}
                                />
                              )}
-                             {platformKeys.map((key, i) => (
+                             {platformDrawOrder.map((key) => (
                                <Area
                                  key={key}
                                  type="monotone"
                                  dataKey={key}
-                                 stackId="1"
-                                 stroke={(PLATFORM_COLORS as any)[key]}
+                                 stroke={(PLATFORM_COLORS as any)[key] || "hsl(var(--accent))"}
                                  strokeWidth={2.25}
                                  fill={`url(#area-${key})`}
+                                 fillOpacity={0.75}
                                  activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))", filter: isMobileRevenueView ? undefined : "url(#goldGlow)" }}
                                  isAnimationActive={false}
                                />
