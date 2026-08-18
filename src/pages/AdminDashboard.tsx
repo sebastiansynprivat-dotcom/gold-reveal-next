@@ -226,8 +226,19 @@ interface ChatterProfile {
   account_password?: string;
   account_domain?: string;
   assigned_accounts?: AccountEntry[];
+  former_assignments?: FormerAssignment[];
   language?: string;
   ui_language?: string;
+}
+
+interface FormerAssignment {
+  key: string;
+  account_id: string;
+  start_date: string;
+  end_date: string;
+  platform: string;
+  account_domain?: string | null;
+  account_email?: string | null;
 }
 
 interface AccountEntry {
