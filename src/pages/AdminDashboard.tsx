@@ -2120,12 +2120,22 @@ export default function AdminDashboard() {
     // 1. Explicitly type the accumulator map
     const dateMap: Record<string, AggregatedData> = {};
 
-    Object.keys(range).forEach((key) => {
+    const keys = Object.keys(range);
+
+    keys.forEach((key) => {
       range[key].forEach(({ date, total }: DataPoint) => {
         if (!dateMap[date]) {
           dateMap[date] = { date };
         }
         dateMap[date][key] = total;
+      });
+    });
+
+    // Zero-fill: jede Plattform muss an jedem Datum einen numerischen Wert haben,
+    // sonst entstehen Lücken/Sprünge im Chart.
+    Object.values(dateMap).forEach((row) => {
+      keys.forEach((key) => {
+        if (typeof row[key] !== "number") row[key] = 0;
       });
     });
 
