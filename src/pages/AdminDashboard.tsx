@@ -4957,7 +4957,22 @@ export default function AdminDashboard() {
             >
               {activeTab === "einnahmen" && (() => {
                 // Derived metrics — purely client-side, no data import changes
-                const platformKeys = ["maloum", "brezzels", "4based"] as const;
+                // Plattform-Keys aus den tatsächlich geladenen Daten ableiten (statt hardcoded),
+                // damit Legende und Linien immer 1:1 übereinstimmen.
+                const platformKeys: string[] = (() => {
+                  const found = new Set<string>();
+                  (rangeData as any[]).forEach((row) => {
+                    Object.keys(row).forEach((k) => {
+                      if (k !== "date") found.add(k);
+                    });
+                  });
+                  const base = ["maloum", "brezzels", "4based"];
+                  const ordered = base.filter((k) => found.has(k));
+                  Array.from(found).forEach((k) => {
+                    if (!ordered.includes(k)) ordered.push(k);
+                  });
+                  return ordered.length > 0 ? ordered : base;
+                })();
                 const dailyTotals = rangeData.map((d: any) => ({
                   date: d.date,
                   total: platformKeys.reduce((s, k) => s + (Number(d[k]) || 0), 0),
