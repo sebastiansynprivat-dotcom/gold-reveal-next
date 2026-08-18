@@ -18,5 +18,5 @@ Add a muted, collapsed "Frühere Zuweisungen" section inside each expanded chatt
 
 ## Technical notes
 - `src/pages/AdminDashboard.tsx`: extend `loadChatters` with a second `account_assignments` query filtered to `end_date is not null`, stored as `former_assignments` on the enriched chatter; add `expandedFormer` state keyed by chatter row key; render the toggle + list in the expanded block after the active account cards.
-- New component `src/components/admin/FormerAssignmentCard.tsx`: header with period, calls the new RPC, renders muted stat rows (mirrors the layout of `AccountStatsRows`).
-- New migration for `get_account_chatter_stats_window` (security definer, `GRANT EXECUTE` to `authenticated`).
+- New component `src/components/admin/FormerAssignmentCard.tsx`: header with period, calls the new RPC once, renders muted stat rows (mirrors the layout of `AccountStatsRows`) plus the scrollable Recharts line chart from the returned `series` array.
+- New migration for `get_account_chatter_stats_window` (security definer, returns one row including a `jsonb` series, `GRANT EXECUTE` to `authenticated`).
