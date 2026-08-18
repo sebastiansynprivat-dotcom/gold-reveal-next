@@ -5595,13 +5595,16 @@ export default function AdminDashboard() {
                           <ResponsiveContainer width="100%" height="100%">
                            <AreaChart data={revenueChartData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
                              <defs>
-                               {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
-                                 <linearGradient key={key} id={`area-${key}`} x1="0" y1="0" x2="0" y2="1">
-                                   <stop offset="0%" stopColor={color} stopOpacity={0.65} />
-                                   <stop offset="55%" stopColor={color} stopOpacity={0.18} />
-                                   <stop offset="100%" stopColor={color} stopOpacity={0} />
-                                 </linearGradient>
-                               ))}
+                               {platformKeys.map((key) => {
+                                 const color = (PLATFORM_COLORS as any)[key] || "hsl(var(--accent))";
+                                 return (
+                                   <linearGradient key={key} id={`area-${key}`} x1="0" y1="0" x2="0" y2="1">
+                                     <stop offset="0%" stopColor={color} stopOpacity={0.45} />
+                                     <stop offset="55%" stopColor={color} stopOpacity={0.14} />
+                                     <stop offset="100%" stopColor={color} stopOpacity={0} />
+                                   </linearGradient>
+                                 );
+                               })}
                                <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
                                  <feGaussianBlur stdDeviation="3" result="coloredBlur" />
                                  <feMerge>
