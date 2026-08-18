@@ -2120,12 +2120,22 @@ export default function AdminDashboard() {
     // 1. Explicitly type the accumulator map
     const dateMap: Record<string, AggregatedData> = {};
 
-    Object.keys(range).forEach((key) => {
+    const keys = Object.keys(range);
+
+    keys.forEach((key) => {
       range[key].forEach(({ date, total }: DataPoint) => {
         if (!dateMap[date]) {
           dateMap[date] = { date };
         }
         dateMap[date][key] = total;
+      });
+    });
+
+    // Zero-fill: jede Plattform muss an jedem Datum einen numerischen Wert haben,
+    // sonst entstehen Lücken/Sprünge im Chart.
+    Object.values(dateMap).forEach((row) => {
+      keys.forEach((key) => {
+        if (typeof row[key] !== "number") row[key] = 0;
       });
     });
 
@@ -4947,7 +4957,22 @@ export default function AdminDashboard() {
             >
               {activeTab === "einnahmen" && (() => {
                 // Derived metrics — purely client-side, no data import changes
-                const platformKeys = ["maloum", "brezzels", "4based"] as const;
+                // Plattform-Keys aus den tatsächlich geladenen Daten ableiten (statt hardcoded),
+                // damit Legende und Linien immer 1:1 übereinstimmen.
+                const platformKeys: string[] = (() => {
+                  const found = new Set<string>();
+                  (rangeData as any[]).forEach((row) => {
+                    Object.keys(row).forEach((k) => {
+                      if (k !== "date") found.add(k);
+                    });
+                  });
+                  const base = ["maloum", "brezzels", "4based"];
+                  const ordered = base.filter((k) => found.has(k));
+                  Array.from(found).forEach((k) => {
+                    if (!ordered.includes(k)) ordered.push(k);
+                  });
+                  return ordered.length > 0 ? ordered : base;
+                })();
                 const dailyTotals = rangeData.map((d: any) => ({
                   date: d.date,
                   total: platformKeys.reduce((s, k) => s + (Number(d[k]) || 0), 0),
@@ -4974,6 +4999,31 @@ export default function AdminDashboard() {
                   return acc;
                 }, {} as Record<string, number>);
                 const revenueChartData = rangeData;
+
+                // Zeichenreihenfolge: größte Plattform zuerst (hinten), kleinere darüber
+                const platformRangeTotals = platformKeys.reduce((acc, k) => {
+                  acc[k] = (rangeData as any[]).reduce((s, d) => s + (Number(d[k]) || 0), 0);
+                  return acc;
+                }, {} as Record<string, number>);
+                const platformDrawOrder = [...platformKeys].sort(
+                  (a, b) => (platformRangeTotals[b] || 0) - (platformRangeTotals[a] || 0),
+                );
+
+                // Y-Achse: max. Einzelwert einer Plattform pro Tag (Areas sind NICHT gestapelt)
+                const maxSingleValue = (rangeData as any[]).reduce((max, d) => {
+                  platformKeys.forEach((k) => {
+                    const v = Number(d[k]) || 0;
+                    if (v > max) max = v;
+                  });
+                  return max;
+                }, 0);
+                const niceStep = (() => {
+                  const target = Math.max(maxSingleValue, avgPerDay, 100) / 4;
+                  const steps = [50, 100, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000, 50000];
+                  return steps.find((s) => s >= target) ?? 100000;
+                })();
+                const yMax = Math.ceil(Math.max(maxSingleValue, avgPerDay, 100) / niceStep) * niceStep;
+                const yTicks = Array.from({ length: Math.round(yMax / niceStep) + 1 }, (_, i) => i * niceStep);
 
                 return (
                 <motion.div
@@ -5530,12 +5580,15 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="flex gap-3 items-center">
-                        {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
-                          <div key={key} className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-secondary/30 border border-border/30">
-                            <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}` }} />
-                            <span className="text-[10px] text-muted-foreground capitalize font-semibold tracking-wide">{key === "4based" ? "4Based" : key}</span>
-                          </div>
-                        ))}
+                        {platformKeys.map((key) => {
+                          const color = (PLATFORM_COLORS as any)[key] || "hsl(var(--accent))";
+                          return (
+                            <div key={key} className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-secondary/30 border border-border/30">
+                              <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}` }} />
+                              <span className="text-[10px] text-muted-foreground capitalize font-semibold tracking-wide">{key === "4based" ? "4Based" : key}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -5545,13 +5598,16 @@ export default function AdminDashboard() {
                           <ResponsiveContainer width="100%" height="100%">
                            <AreaChart data={revenueChartData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
                              <defs>
-                               {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
-                                 <linearGradient key={key} id={`area-${key}`} x1="0" y1="0" x2="0" y2="1">
-                                   <stop offset="0%" stopColor={color} stopOpacity={0.65} />
-                                   <stop offset="55%" stopColor={color} stopOpacity={0.18} />
-                                   <stop offset="100%" stopColor={color} stopOpacity={0} />
-                                 </linearGradient>
-                               ))}
+                               {platformKeys.map((key) => {
+                                 const color = (PLATFORM_COLORS as any)[key] || "hsl(var(--accent))";
+                                 return (
+                                   <linearGradient key={key} id={`area-${key}`} x1="0" y1="0" x2="0" y2="1">
+                                     <stop offset="0%" stopColor={color} stopOpacity={0.45} />
+                                     <stop offset="55%" stopColor={color} stopOpacity={0.14} />
+                                     <stop offset="100%" stopColor={color} stopOpacity={0} />
+                                   </linearGradient>
+                                 );
+                               })}
                                <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
                                  <feGaussianBlur stdDeviation="3" result="coloredBlur" />
                                  <feMerge>
@@ -5574,6 +5630,9 @@ export default function AdminDashboard() {
                                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
                                tickLine={false}
                                axisLine={false}
+                               domain={[0, yMax]}
+                               ticks={yTicks}
+                               allowDataOverflow={false}
                                tickFormatter={(v) => `${fmtK(v)}`}
                                width={44}
                              />
@@ -5590,7 +5649,12 @@ export default function AdminDashboard() {
                                }}
                                itemStyle={{ color: "hsl(var(--foreground))", fontWeight: 600, padding: "2px 0" }}
                                formatter={(value: number, name: string) => [`${Number(value).toLocaleString("de-DE")}`, name === "4based" ? "4Based" : name.charAt(0).toUpperCase() + name.slice(1)]}
-                               labelFormatter={(v) => { try { return format(new Date(v), "EEE, dd.MM.yyyy"); } catch { return v; } }}
+                               labelFormatter={(v, payload) => {
+                                 const total = (payload || []).reduce((s: number, p: any) => s + (Number(p?.value) || 0), 0);
+                                 let label = String(v);
+                                 try { label = format(new Date(v as string), "EEE, dd.MM.yyyy"); } catch { /* keep raw */ }
+                                 return `${label} · Σ ${total.toLocaleString("de-DE")}`;
+                               }}
                                labelStyle={{ color: "hsl(var(--accent))", fontSize: "10px", marginBottom: "8px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}
                              />}
                              {!isMobileRevenueView && avgPerDay > 0 && (
@@ -5599,18 +5663,18 @@ export default function AdminDashboard() {
                                  stroke="hsl(var(--accent))"
                                  strokeDasharray="3 6"
                                  strokeOpacity={0.5}
-                                 label={{ value: `Ø ${fmtK(avgPerDay)}`, position: "right", fill: "hsl(var(--accent))", fontSize: 9, fontWeight: 700 }}
+                                 label={{ value: `Ø ${fmtK(avgPerDay)} / aktiver Tag (gesamt)`, position: "insideTopRight", fill: "hsl(var(--accent))", fontSize: 9, fontWeight: 700 }}
                                />
                              )}
-                             {platformKeys.map((key, i) => (
+                             {platformDrawOrder.map((key) => (
                                <Area
                                  key={key}
                                  type="monotone"
                                  dataKey={key}
-                                 stackId="1"
-                                 stroke={(PLATFORM_COLORS as any)[key]}
+                                 stroke={(PLATFORM_COLORS as any)[key] || "hsl(var(--accent))"}
                                  strokeWidth={2.25}
                                  fill={`url(#area-${key})`}
+                                 fillOpacity={0.75}
                                  activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))", filter: isMobileRevenueView ? undefined : "url(#goldGlow)" }}
                                  isAnimationActive={false}
                                />
