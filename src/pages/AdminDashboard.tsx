@@ -5649,7 +5649,7 @@ export default function AdminDashboard() {
                                  stroke="hsl(var(--accent))"
                                  strokeDasharray="3 6"
                                  strokeOpacity={0.5}
-                                 label={{ value: `Ø ${fmtK(avgPerDay)}`, position: "right", fill: "hsl(var(--accent))", fontSize: 9, fontWeight: 700 }}
+                                 label={{ value: `Ø ${fmtK(avgPerDay)} / aktiver Tag (gesamt)`, position: "insideTopRight", fill: "hsl(var(--accent))", fontSize: 9, fontWeight: 700 }}
                                />
                              )}
                              {platformDrawOrder.map((key) => (
