@@ -6754,6 +6754,46 @@ export default function AdminDashboard() {
                                     /* No accounts: just stats */
                                     <ChatterStatsCard userId={chatter.user_id || chatter.id} name={chatter.group_name || "Chatter"} stats={chatterRealStats[chatter.rowKey]} />
                                   )}
+
+                                  {/* Former assignments */}
+                                  {(chatter.former_assignments?.length || 0) > 0 && (
+                                    <div className="mt-3">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setExpandedFormer((prev) => ({
+                                            ...prev,
+                                            [chatter.rowKey]: !prev[chatter.rowKey],
+                                          }));
+                                        }}
+                                        className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+                                      >
+                                        <ChevronRight
+                                          className={cn(
+                                            "h-3 w-3 transition-transform",
+                                            expandedFormer[chatter.rowKey] && "rotate-90",
+                                          )}
+                                        />
+                                        Frühere Zuweisungen ({chatter.former_assignments!.length})
+                                      </button>
+                                      {expandedFormer[chatter.rowKey] && (
+                                        <div className="mt-2 space-y-2 animate-in fade-in duration-200">
+                                          {chatter.former_assignments!.map((fa) => (
+                                            <FormerAssignmentCard
+                                              key={fa.key}
+                                              accountId={fa.account_id}
+                                              userId={chatter.user_id || chatter.id}
+                                              platform={fa.platform}
+                                              accountDomain={fa.account_domain}
+                                              accountEmail={fa.account_email}
+                                              startDate={fa.start_date}
+                                              endDate={fa.end_date}
+                                            />
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               )}
                               {/* AI Summary – below chatter row, visible when toggle is on */}
