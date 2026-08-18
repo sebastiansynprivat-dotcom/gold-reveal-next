@@ -5580,12 +5580,15 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="flex gap-3 items-center">
-                        {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
-                          <div key={key} className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-secondary/30 border border-border/30">
-                            <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}` }} />
-                            <span className="text-[10px] text-muted-foreground capitalize font-semibold tracking-wide">{key === "4based" ? "4Based" : key}</span>
-                          </div>
-                        ))}
+                        {platformKeys.map((key) => {
+                          const color = (PLATFORM_COLORS as any)[key] || "hsl(var(--accent))";
+                          return (
+                            <div key={key} className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-secondary/30 border border-border/30">
+                              <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}` }} />
+                              <span className="text-[10px] text-muted-foreground capitalize font-semibold tracking-wide">{key === "4based" ? "4Based" : key}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
 
