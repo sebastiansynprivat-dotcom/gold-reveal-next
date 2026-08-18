@@ -5624,6 +5624,9 @@ export default function AdminDashboard() {
                                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
                                tickLine={false}
                                axisLine={false}
+                               domain={[0, yMax]}
+                               ticks={yTicks}
+                               allowDataOverflow={false}
                                tickFormatter={(v) => `${fmtK(v)}`}
                                width={44}
                              />
@@ -5640,7 +5643,12 @@ export default function AdminDashboard() {
                                }}
                                itemStyle={{ color: "hsl(var(--foreground))", fontWeight: 600, padding: "2px 0" }}
                                formatter={(value: number, name: string) => [`${Number(value).toLocaleString("de-DE")}`, name === "4based" ? "4Based" : name.charAt(0).toUpperCase() + name.slice(1)]}
-                               labelFormatter={(v) => { try { return format(new Date(v), "EEE, dd.MM.yyyy"); } catch { return v; } }}
+                               labelFormatter={(v, payload) => {
+                                 const total = (payload || []).reduce((s: number, p: any) => s + (Number(p?.value) || 0), 0);
+                                 let label = String(v);
+                                 try { label = format(new Date(v as string), "EEE, dd.MM.yyyy"); } catch { /* keep raw */ }
+                                 return `${label} · Σ ${total.toLocaleString("de-DE")}`;
+                               }}
                                labelStyle={{ color: "hsl(var(--accent))", fontSize: "10px", marginBottom: "8px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}
                              />}
                              {!isMobileRevenueView && avgPerDay > 0 && (
