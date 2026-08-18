@@ -2673,6 +2673,46 @@ export default function AdminDashboard() {
     });
     const accountById = new Map(accs.map((a) => [a.id, a]));
 
+    // Fetch closed (former) assignments – paged, can exceed 1000 rows
+    const closedRows: any[] = [];
+    for (let page = 0; page < 50; page++) {
+      const from = page * 1000;
+      const { data: chunk, error: closedErr } = await supabase
+        .from("account_assignments")
+        .select("account_id, user_id, profile_id, start_date, end_date")
+        .not("end_date", "is", null)
+        .order("end_date", { ascending: false })
+        .range(from, from + 999);
+      if (closedErr) break;
+      const list = chunk || [];
+      closedRows.push(...list);
+      if (list.length < 1000) break;
+    }
+    const formerByUser = new Map<string, FormerAssignment[]>();
+    const formerByProfile = new Map<string, FormerAssignment[]>();
+    closedRows.forEach((a: any, idx: number) => {
+      const acc = accountById.get(a.account_id);
+      const entry: FormerAssignment = {
+        key: `${a.account_id}-${a.start_date}-${a.end_date}-${idx}`,
+        account_id: a.account_id,
+        start_date: a.start_date,
+        end_date: a.end_date,
+        platform: acc?.platform || "Account entfernt",
+        account_domain: acc?.account_domain || null,
+        account_email: acc?.account_email || null,
+      };
+      if (a.user_id) {
+        const arr = formerByUser.get(a.user_id) || [];
+        arr.push(entry);
+        formerByUser.set(a.user_id, arr);
+      } else if (a.profile_id) {
+        const arr = formerByProfile.get(a.profile_id) || [];
+        arr.push(entry);
+        formerByProfile.set(a.profile_id, arr);
+      }
+    });
+
+
     // Ensure modelNames map is populated for the chatter list
     const modelIds = [...new Set(accs.map((a) => a.model_id).filter(Boolean))] as string[];
     if (modelIds.length > 0) {
