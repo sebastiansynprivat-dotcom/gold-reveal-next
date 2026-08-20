@@ -1,4 +1,25 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+
+/** Data-freshness label for today's ingested revenue. Stale = older than 3h. */
+const STALE_AFTER_MS = 3 * 60 * 60 * 1000;
+function freshnessInfo(ts: Date | null, lang: string) {
+  if (!ts) return null;
+  const time = ts.toLocaleTimeString(lang === "en" ? "en-GB" : "de-DE", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const stale = Date.now() - ts.getTime() > STALE_AFTER_MS;
+  return {
+    stale,
+    label: stale
+      ? lang === "en"
+        ? `Updating – as of ${time}`
+        : `Daten werden aktualisiert – Stand ${time}`
+      : lang === "en"
+        ? `As of ${time}`
+        : `Stand ${time}`,
+  };
+}
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Save,
@@ -702,6 +723,7 @@ export default function Dashboard() {
   const [videoOpen, setVideoOpen] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [umsatz, setUmsatz] = useState(0);
+  const [dataFreshness, setDataFreshness] = useState<Date | null>(null);
   const [yesterdayRevenue, setYesterdayRevenue] = useState(0);
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -718,6 +740,11 @@ export default function Dashboard() {
       const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
       const monthStart = today.slice(0, 8) + "01";
       const yearStart = today.slice(0, 4) + "-01-01";
+
+      // Freshness of today's ingested data (silently ignored on failure)
+      void supabase
+        .rpc("get_chatter_data_freshness")
+        .then(({ data: ts }) => setDataFreshness(ts ? new Date(ts as string) : null));
 
       const { data, error } = await supabase.rpc("get_chatter_revenue_series", {
         p_from: yearStart,
@@ -1049,6 +1076,15 @@ export default function Dashboard() {
                   {lang === "en" ? "Revenue" : "Umsatz"}
                 </p>
                 <p className="text-foreground font-semibold text-base leading-tight mt-0.5">€{umsatz || "0"}</p>
+                {(() => {
+                  const f = freshnessInfo(dataFreshness, lang);
+                  if (!f) return null;
+                  return (
+                    <p className={`text-[9px] leading-none mt-0.5 ${f.stale ? "text-accent" : "text-muted-foreground"}`}>
+                      {f.label}
+                    </p>
+                  );
+                })()}
               </div>
               <Badge
                 className={
@@ -1170,11 +1206,22 @@ export default function Dashboard() {
                   </>
                 )}
               </div>
-              <div className="shrink-0 flex items-center gap-1" data-tour="revenue-input">
-                <Zap className="h-3 w-3 text-accent" />
-                <div className="input-gold-shimmer rounded-lg">
-                  <span className="h-7 text-sm w-24 font-semibold border-transparent">Umsatz: €{umsatz || "0"}</span>
+              <div className="shrink-0 flex flex-col items-end gap-0.5" data-tour="revenue-input">
+                <div className="flex items-center gap-1">
+                  <Zap className="h-3 w-3 text-accent" />
+                  <div className="input-gold-shimmer rounded-lg">
+                    <span className="h-7 text-sm w-24 font-semibold border-transparent">Umsatz: €{umsatz || "0"}</span>
+                  </div>
                 </div>
+                {(() => {
+                  const f = freshnessInfo(dataFreshness, lang);
+                  if (!f) return null;
+                  return (
+                    <span className={`text-[9px] leading-none ${f.stale ? "text-accent" : "text-muted-foreground"}`}>
+                      {f.label}
+                    </span>
+                  );
+                })()}
               </div>
             </div>
           </div>
