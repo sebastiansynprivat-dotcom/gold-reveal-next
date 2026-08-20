@@ -3453,6 +3453,7 @@ export type Database = {
           url: string
         }[]
       }
+      get_chatter_data_freshness: { Args: never; Returns: string }
       get_chatter_real_stats: {
         Args: { p_profile_ids?: string[]; p_user_ids: string[] }
         Returns: {
@@ -3506,6 +3507,17 @@ export type Database = {
         Returns: {
           chatter_count: number
           total_revenue: number
+        }[]
+      }
+      get_stale_ingest_accounts: {
+        Args: { p_hours?: number }
+        Returns: {
+          account_email: string
+          account_id: string
+          last_update: string
+          platform: string
+          total: number
+          username: string
         }[]
       }
       has_role: {
