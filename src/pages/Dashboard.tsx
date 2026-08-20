@@ -1206,11 +1206,22 @@ export default function Dashboard() {
                   </>
                 )}
               </div>
-              <div className="shrink-0 flex items-center gap-1" data-tour="revenue-input">
-                <Zap className="h-3 w-3 text-accent" />
-                <div className="input-gold-shimmer rounded-lg">
-                  <span className="h-7 text-sm w-24 font-semibold border-transparent">Umsatz: €{umsatz || "0"}</span>
+              <div className="shrink-0 flex flex-col items-end gap-0.5" data-tour="revenue-input">
+                <div className="flex items-center gap-1">
+                  <Zap className="h-3 w-3 text-accent" />
+                  <div className="input-gold-shimmer rounded-lg">
+                    <span className="h-7 text-sm w-24 font-semibold border-transparent">Umsatz: €{umsatz || "0"}</span>
+                  </div>
                 </div>
+                {(() => {
+                  const f = freshnessInfo(dataFreshness, lang);
+                  if (!f) return null;
+                  return (
+                    <span className={`text-[9px] leading-none ${f.stale ? "text-accent" : "text-muted-foreground"}`}>
+                      {f.label}
+                    </span>
+                  );
+                })()}
               </div>
             </div>
           </div>
