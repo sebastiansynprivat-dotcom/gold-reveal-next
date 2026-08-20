@@ -702,6 +702,7 @@ export default function Dashboard() {
   const [videoOpen, setVideoOpen] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [umsatz, setUmsatz] = useState(0);
+  const [dataFreshness, setDataFreshness] = useState<Date | null>(null);
   const [yesterdayRevenue, setYesterdayRevenue] = useState(0);
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
