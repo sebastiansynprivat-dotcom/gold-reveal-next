@@ -1,25 +1,33 @@
-# ingest-post-reports: diagnose the 400s
+# "Umsatz heute" falsch bei Philip S — Ursache und Fix
 
-## What the logs show
+## Was tatsächlich los ist (geprüft in der Datenbank)
 
-Every recent call to `ingest-post-reports` is a `POST` that returns **HTTP 400** (12 of 12 in the retained window, roughly one batch every ~2 minutes, retried 3x each time). No other ingest function is failing — `ingest-account-data` and `ingest-revenue` return 200.
+Philip S (Profil `Philip_S`, Telegram 7260908130) hat heute (20.08.) diese Zahlen in `accounts_data`:
 
-400 in that function is only ever returned by its own input validation (auth failure would be 401, a database problem 500). So the caller's payload is being rejected. The function currently logs nothing on a validation failure, so the logs cannot tell us *which* field is wrong — that is the gap to close first.
+| Account | Plattform | Umsatz heute | zuletzt aktualisiert |
+|---|---|---|---|
+| alinaangel | Maloum | 76,20 € | 20.08. 22:32 |
+| deborahssecret | Maloum | 95,20 € | 20.08. **12:13** |
+| mandyrosee | Maloum | 18,00 € | 20.08. **12:13** |
+| deborahssecret | Brezzels | 0,00 € | 20.08. 23:02 |
 
-The possible rejections, given the code, are:
-- `account_id` missing or not a UUID (e.g. an account name or numeric platform id sent instead)
-- `date` not in `YYYY-MM-DD` form (e.g. `20.08.2026`, or an ISO timestamp)
-- `posted` / `failed` not a non-negative integer (e.g. `"3,5"`, `null` in a string field, a float)
+Die App rechnet korrekt — die Daten sind veraltet. Für Maloum lief der Ingest zuletzt um 23:21, aber **28 Maloum-Accounts wurden seit 12:13 in keinem Batch mehr mitgeliefert**, darunter genau `mandyrosee` und `deborahssecret` (Mandy ist das Model, um das es im Chat geht). Es gibt dazu keine Fehlermeldung in `bot_notifications` — die Accounts fehlen einfach stillschweigend in den Payloads. Die Ursache liegt also beim externen Ingest-Bot (Maloum-Session/Auswahlliste), nicht im Dashboard-Code.
 
-## Plan
+Folge: Der Chatter sieht ~189 € statt des echten Tagesumsatzes und hat keine Möglichkeit zu erkennen, dass die Zahl alt ist.
 
-1. Add request-scoped logging to `supabase/functions/ingest-post-reports/index.ts`, matching the style already used in `ingest-account-data`: a short request id, the received row count, and — on any validation failure — the row index, the field name, and the offending value.
-2. Make the 400 responses self-describing: include `row`, `field`, and `got` in the JSON body so the calling bot's own error output identifies the problem.
-3. Accept the harmless shape variations that most likely cause this, without loosening data integrity:
-   - `date` also accepted as a full ISO timestamp / `DD.MM.YYYY`, normalised to `YYYY-MM-DD`
-   - `posted` / `failed` accepted as numeric strings and as `null`/absent (treated as `0`), still rejecting negatives and non-numerics
-4. Redeploy, then re-read the function logs after the next incoming batch and report the exact rejected field. If it turns out to be `account_id` (a name or foreign id rather than our UUID), that is a caller-side mapping issue and I'll come back with the concrete mapping fix rather than silently guessing an account.
+## Was ich im Dashboard baue
 
-## Notes
+1. **Frischeanzeige an „Umsatz heute“**: kleiner Zeitstempel „Stand HH:MM“ (jüngstes `updated_at` der zugewiesenen Accounts des Tages). Wenn älter als 3 Stunden: dezenter goldener Warnhinweis „Daten werden aktualisiert – Stand HH:MM“ (DE/EN), damit niemand mehr eine veraltete Zahl für falsch hält.
+2. **Admin-Sichtbarkeit für hängende Accounts**: im Admin-Dashboard eine Warnkarte „Ingest hängt“, die alle aktiven Accounts listet, deren heutige Zeile seit mehr als 3 Stunden nicht aktualisiert wurde — gruppiert nach Plattform, mit Uhrzeit des letzten Updates. Damit fällt so ein Ausfall künftig sofort auf, statt über einen Chatter-Report.
+3. Keine Änderung an der Umsatz-Berechnung selbst (die ist korrekt) und keine Fake-Werte.
 
-No schema change is needed — `post_reports` already matches the payload (`account_id uuid`, `date date`, `posted int`, `failed int`) and the upsert conflict target is correct.
+## Was ich nicht in der App lösen kann
+
+Das Nachliefern der fehlenden Maloum-Daten von 12:13 bis jetzt muss der Ingest-Bot machen (erneuter Lauf für die 28 Accounts). Sobald er die Rows schickt, korrigiert sich Philips Kachel automatisch. Wenn du willst, liste ich dir die 28 betroffenen Account-E-Mails aus, damit der Bot gezielt nachgezogen werden kann.
+
+## Technische Details
+
+- Betroffene Tabelle: `accounts_data` (`date`, `total`, `updated_at`), gelesen über `get_chatter_revenue_series`.
+- Chatter-Kachel: `src/pages/Dashboard.tsx` (`setUmsatz` aus dem heutigen Serien-Eintrag) — dort zusätzlich ein leichter Query auf `max(updated_at)` der zugewiesenen Accounts für heute.
+- Admin-Karte: neue Komponente unter `src/components/admin/`, eingebunden im Setup-/Übersichtsbereich von `src/pages/AdminDashboard.tsx`, Daten per RPC (Security Definer) über `accounts_data` + aktive `accounts`.
+- Texte in `src/i18n/translations.ts` (DE/EN).
