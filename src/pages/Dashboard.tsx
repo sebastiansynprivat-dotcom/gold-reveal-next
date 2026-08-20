@@ -720,6 +720,11 @@ export default function Dashboard() {
       const monthStart = today.slice(0, 8) + "01";
       const yearStart = today.slice(0, 4) + "-01-01";
 
+      // Freshness of today's ingested data (silently ignored on failure)
+      void supabase
+        .rpc("get_chatter_data_freshness")
+        .then(({ data: ts }) => setDataFreshness(ts ? new Date(ts as string) : null));
+
       const { data, error } = await supabase.rpc("get_chatter_revenue_series", {
         p_from: yearStart,
         p_to: today,
