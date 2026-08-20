@@ -1076,6 +1076,15 @@ export default function Dashboard() {
                   {lang === "en" ? "Revenue" : "Umsatz"}
                 </p>
                 <p className="text-foreground font-semibold text-base leading-tight mt-0.5">€{umsatz || "0"}</p>
+                {(() => {
+                  const f = freshnessInfo(dataFreshness, lang);
+                  if (!f) return null;
+                  return (
+                    <p className={`text-[9px] leading-none mt-0.5 ${f.stale ? "text-accent" : "text-muted-foreground"}`}>
+                      {f.label}
+                    </p>
+                  );
+                })()}
               </div>
               <Badge
                 className={
