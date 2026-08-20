@@ -1,4 +1,25 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+
+/** Data-freshness label for today's ingested revenue. Stale = older than 3h. */
+const STALE_AFTER_MS = 3 * 60 * 60 * 1000;
+function freshnessInfo(ts: Date | null, lang: string) {
+  if (!ts) return null;
+  const time = ts.toLocaleTimeString(lang === "en" ? "en-GB" : "de-DE", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const stale = Date.now() - ts.getTime() > STALE_AFTER_MS;
+  return {
+    stale,
+    label: stale
+      ? lang === "en"
+        ? `Updating – as of ${time}`
+        : `Daten werden aktualisiert – Stand ${time}`
+      : lang === "en"
+        ? `As of ${time}`
+        : `Stand ${time}`,
+  };
+}
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Save,
