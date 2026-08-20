@@ -86,6 +86,7 @@ import AssignAccountToChatterButton from "@/components/admin/AssignAccountToChat
 import PreChattersDialog from "@/components/admin/PreChattersDialog";
 import SetupNotificationsBell from "@/components/admin/SetupNotificationsBell";
 import SetupAttentionAlert from "@/components/admin/SetupAttentionAlert";
+import StaleIngestAlert from "@/components/admin/StaleIngestAlert";
 import PlatformsManager from "@/components/admin/PlatformsManager";
 
 import {
@@ -8777,6 +8778,8 @@ export default function AdminDashboard() {
                       )}
                     </AnimatePresence>
                   </section>
+
+                  <StaleIngestAlert />
 
                   {/* Unified BotDMs & Setup Table */}
                   <section className="glass-card rounded-xl overflow-hidden">
