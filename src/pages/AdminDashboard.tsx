@@ -3409,8 +3409,21 @@ export default function AdminDashboard() {
           if (ag) { chatterAgencyByUser.set(uid, ag); break; }
         }
       }
-      setModelRequests(
-        data.map((r: any) => {
+      // Lokale UI-Zustände (offenes Kommentarfeld, getippter Text, aufgeklappte
+      // Bereiche) müssen einen Refresh überleben – sonst schließt sich das
+      // Antwortfeld beim App-Wechsel wieder.
+      const LOCAL_UI_KEYS = [
+        "_editingComment",
+        "_localComment",
+        "_localAttachments",
+        "_localContentLink",
+        "_expanded",
+        "_open",
+        "_showRejectReason",
+      ];
+      setModelRequests((prevReqs) => {
+        const prevById = new Map((prevReqs || []).map((r: any) => [r.id, r]));
+        return data.map((r: any) => {
           const msgs = msgsByReq[r.id] || [];
           const ctx = [r.description, r.customer_name, ...msgs.map((m: any) => m.body)].filter(Boolean).join(" ");
           const _model = findModel(r.model_name, ctx, r.user_id, r.model_id);
