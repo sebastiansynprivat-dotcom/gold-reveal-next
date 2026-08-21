@@ -970,6 +970,9 @@ export default function AdminDashboard() {
   const adminDataBootstrapRef = useRef(false);
   const [modelRequests, setModelRequests] = useState<any[]>([]);
   const [modelRequestsLoaded, setModelRequestsLoaded] = useState(false);
+  // Zeitpunkt des letzten Anfragen-Loads – verhindert ein komplettes Neuladen,
+  // wenn man nur kurz aus der App raus und wieder rein wechselt.
+  const lastRequestsLoadRef = useRef(0);
   const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "waiting_feedback" | "rejected" | "archived" | "followup_due">(
     "all",
   );
@@ -3406,8 +3409,21 @@ export default function AdminDashboard() {
           if (ag) { chatterAgencyByUser.set(uid, ag); break; }
         }
       }
-      setModelRequests(
-        data.map((r: any) => {
+      // Lokale UI-Zustände (offenes Kommentarfeld, getippter Text, aufgeklappte
+      // Bereiche) müssen einen Refresh überleben – sonst schließt sich das
+      // Antwortfeld beim App-Wechsel wieder.
+      const LOCAL_UI_KEYS = [
+        "_editingComment",
+        "_localComment",
+        "_localAttachments",
+        "_localContentLink",
+        "_expanded",
+        "_open",
+        "_showRejectReason",
+      ];
+      setModelRequests((prevReqs) => {
+        const prevById = new Map((prevReqs || []).map((r: any) => [r.id, r]));
+        return data.map((r: any) => {
           const msgs = msgsByReq[r.id] || [];
           const ctx = [r.description, r.customer_name, ...msgs.map((m: any) => m.body)].filter(Boolean).join(" ");
           const _model = findModel(r.model_name, ctx, r.user_id, r.model_id);
@@ -3470,6 +3486,11 @@ export default function AdminDashboard() {
             })
             .sort((a, b) => a.name.localeCompare(b.name));
           const _modelVerified = !!(r.model_id && _model && String(_model.id) === String(r.model_id));
+          const prevReq: any = prevById.get(r.id) || {};
+          const preserved: Record<string, any> = {};
+          for (const k of LOCAL_UI_KEYS) {
+            if (prevReq[k] !== undefined) preserved[k] = prevReq[k];
+          }
           return {
             ...r,
             // Canonical name wins over the stored free text once the link is verified.
@@ -3488,12 +3509,12 @@ export default function AdminDashboard() {
             _chatterDeleted: !!info?.deleted,
             _chatterDeletedAt: info?.deleted_at || null,
             _chatterKnown: !!info,
+            ...preserved,
           };
-
-
-        }),
-      );
+        });
+      });
     }
+    lastRequestsLoadRef.current = Date.now();
     setModelRequestsLoaded(true);
   };
 
@@ -3535,7 +3556,11 @@ export default function AdminDashboard() {
 
     const handleOnline = () => void loadModelRequests();
     const handleVisible = () => {
-      if (document.visibilityState === "visible") void loadModelRequests();
+      if (document.visibilityState !== "visible") return;
+      // Kurzes Wegwechseln (z. B. Text aus WhatsApp kopieren) soll die Ansicht
+      // nicht neu aufbauen – Realtime hält sie ohnehin aktuell.
+      if (Date.now() - lastRequestsLoadRef.current < 60_000) return;
+      void loadModelRequests();
     };
     window.addEventListener("online", handleOnline);
     document.addEventListener("visibilitychange", handleVisible);
@@ -3549,7 +3574,7 @@ export default function AdminDashboard() {
     // loadModelRequests intentionally uses the current dashboard state and is
     // invoked only from realtime/online events while this tab is mounted.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, user]);
+  }, [user]);
 
   // ==== Follow-up helpers (Custom Anfragen) ====
   const FOLLOWUP_THRESHOLD_DAYS = 2;
