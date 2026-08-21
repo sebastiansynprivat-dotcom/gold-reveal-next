@@ -1407,10 +1407,14 @@ export default function AdminDashboard() {
   const myAdminName = ((user?.id ? adminNames[user.id] : "") || "").toLowerCase();
   const isReqForMe = useCallback((req: any): boolean => {
     const platform = getReqPlatform(req);
+    // Ohne Plattform-Tag darf keine Zuständigkeitsregel greifen — sonst
+    // verschwinden neue Kommentare bei allen Admins.
+    if (!platform) return true;
     if (myAdminName.includes("vanessa")) return platform === "maloum";
     if (myAdminName.includes("max")) return platform !== "maloum";
     return true;
   }, [myAdminName, getReqPlatform]);
+
   const isReqUnreadForMe = useCallback(
     (req: any) => isReqUnread(req) && isReqForMe(req),
     [isReqUnread, isReqForMe],
@@ -3432,10 +3436,13 @@ export default function AdminDashboard() {
   // only loaded when the tab was opened, so chatter replies that arrived later
   // stayed invisible until a full page refresh.
   useEffect(() => {
-    if (!user || activeTab !== "anfragen") return;
+    // Nicht mehr an den Tab gebunden: sonst blieb der Ungelesen-Zähler und der
+    // Kommentarverlauf veraltet, solange ein anderer Tab offen war.
+    if (!user) return;
 
     // Always catch up on messages that arrived while this tab was closed.
     void loadModelRequests();
+
 
     let refreshTimer: ReturnType<typeof setTimeout> | undefined;
     const refreshRequests = () => {
@@ -7195,7 +7202,10 @@ export default function AdminDashboard() {
                     {modelRequests.filter((r) => {
                       if (unreadOnly) {
                         if (!isReqUnreadForMe(r)) return false;
-                        if (r.status === "archived" || r.status === "rejected") return false;
+                        // Auch archivierte/abgelehnte Anfragen anzeigen, wenn ein
+                        // neuer Chatter-Kommentar ungelesen ist — sonst gehen
+                        // Rückmeldungen verloren (Badge zählte, Liste blieb leer).
+
                       } else {
                         if (requestFilter === "followup_due") {
                           if (!needsFollowUp(r)) return false;
@@ -7244,7 +7254,9 @@ export default function AdminDashboard() {
                           .filter((r) => {
                             if (unreadOnly) {
                               if (!isReqUnreadForMe(r)) return false;
-                              if (r.status === "archived" || r.status === "rejected") return false;
+                              // siehe oben: ungelesene Kommentare bleiben sichtbar,
+                              // auch bei archiviert/abgelehnt
+
                             } else {
                               if (requestFilter === "followup_due") {
                                 if (!needsFollowUp(r)) return false;
