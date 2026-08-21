@@ -982,6 +982,7 @@ export default function AdminDashboard() {
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [contentDropOpen, setContentDropOpen] = useState(false);
   const [seenRequestMsgs, setSeenRequestMsgs] = useState<Record<string, string>>({});
+  const [pendingUnread, setPendingUnread] = useState<Record<string, string>>({});
   const [msgReactions, setMsgReactions] = useState<Record<string, "👍">>({});
   const [notifTitle, setNotifTitle] = useState("");
   const [notifBody, setNotifBody] = useState("");
@@ -1249,20 +1250,33 @@ export default function AdminDashboard() {
     })();
   }, []);
 
-  // Load/persist seen-state for request comments per admin
+  // Load/persist seen-state for request comments per admin.
+  // IMPORTANT: never write before the stored value was loaded, otherwise a fresh
+  // mount (e.g. after a crash + re-login) overwrites the file with "{}".
+  const seenLoadedRef = useRef(false);
   useEffect(() => {
     if (!user?.id) return;
+    seenLoadedRef.current = false;
     try {
       const raw = localStorage.getItem(`admin_seen_request_msgs_${user.id}`);
-      if (raw) setSeenRequestMsgs(JSON.parse(raw));
+      setSeenRequestMsgs(raw ? JSON.parse(raw) : {});
+      const rawU = localStorage.getItem(`admin_unread_request_msgs_${user.id}`);
+      setPendingUnread(rawU ? JSON.parse(rawU) : {});
     } catch {}
+    seenLoadedRef.current = true;
   }, [user?.id]);
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || !seenLoadedRef.current) return;
     try {
       localStorage.setItem(`admin_seen_request_msgs_${user.id}`, JSON.stringify(seenRequestMsgs));
     } catch {}
   }, [seenRequestMsgs, user?.id]);
+  useEffect(() => {
+    if (!user?.id || !seenLoadedRef.current) return;
+    try {
+      localStorage.setItem(`admin_unread_request_msgs_${user.id}`, JSON.stringify(pendingUnread));
+    } catch {}
+  }, [pendingUnread, user?.id]);
 
   // Load/persist message reactions per admin
   useEffect(() => {
@@ -1287,17 +1301,53 @@ export default function AdminDashboard() {
     }
     return latest;
   }, []);
+  // Sticky unread: a detected new comment stays unread until it is explicitly
+  // marked as read — even if a later (partial/failed) load no longer returns it.
+  const getUnreadStamp = useCallback((req: any): string | null => {
+    const latest = getLatestChatterMsgAt(req);
+    const sticky = pendingUnread[req.id] || null;
+    if (latest && sticky) return latest > sticky ? latest : sticky;
+    return latest || sticky;
+  }, [getLatestChatterMsgAt, pendingUnread]);
   const isReqUnread = useCallback((req: any): boolean => {
-    const latest = getLatestChatterMsgAt(req);
-    if (!latest) return false;
+    const stamp = getUnreadStamp(req);
+    if (!stamp) return false;
     const seen = seenRequestMsgs[req.id];
-    return !seen || seen < latest;
-  }, [seenRequestMsgs, getLatestChatterMsgAt]);
+    return !seen || seen < stamp;
+  }, [seenRequestMsgs, getUnreadStamp]);
   const markReqSeen = useCallback((req: any) => {
-    const latest = getLatestChatterMsgAt(req);
-    if (!latest) return;
-    setSeenRequestMsgs((prev) => (prev[req.id] === latest ? prev : { ...prev, [req.id]: latest }));
-  }, [getLatestChatterMsgAt]);
+    const stamp = getUnreadStamp(req);
+    if (!stamp) return;
+    setSeenRequestMsgs((prev) => (prev[req.id] === stamp ? prev : { ...prev, [req.id]: stamp }));
+    setPendingUnread((prev) => {
+      if (!prev[req.id]) return prev;
+      const next = { ...prev };
+      delete next[req.id];
+      return next;
+    });
+  }, [getUnreadStamp]);
+
+  // Remember every freshly detected unread comment so it survives reloads,
+  // logouts and incomplete message loads.
+  useEffect(() => {
+    if (!seenLoadedRef.current || modelRequests.length === 0) return;
+    setPendingUnread((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const r of modelRequests as any[]) {
+        const latest = getLatestChatterMsgAt(r);
+        if (!latest) continue;
+        const seen = seenRequestMsgs[r.id];
+        if (seen && seen >= latest) continue;
+        if (next[r.id] !== latest) {
+          next[r.id] = latest;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [modelRequests, seenRequestMsgs, getLatestChatterMsgAt]);
+
 
   // Platform-based routing for unread comments:
   // Vanessa → only Maloum, Max → everything except Maloum. Others see all.
