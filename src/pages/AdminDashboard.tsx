@@ -982,6 +982,7 @@ export default function AdminDashboard() {
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [contentDropOpen, setContentDropOpen] = useState(false);
   const [seenRequestMsgs, setSeenRequestMsgs] = useState<Record<string, string>>({});
+  const [pendingUnread, setPendingUnread] = useState<Record<string, string>>({});
   const [msgReactions, setMsgReactions] = useState<Record<string, "👍">>({});
   const [notifTitle, setNotifTitle] = useState("");
   const [notifBody, setNotifBody] = useState("");
