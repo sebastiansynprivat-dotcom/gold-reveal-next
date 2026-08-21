@@ -3556,7 +3556,11 @@ export default function AdminDashboard() {
 
     const handleOnline = () => void loadModelRequests();
     const handleVisible = () => {
-      if (document.visibilityState === "visible") void loadModelRequests();
+      if (document.visibilityState !== "visible") return;
+      // Kurzes Wegwechseln (z. B. Text aus WhatsApp kopieren) soll die Ansicht
+      // nicht neu aufbauen – Realtime hält sie ohnehin aktuell.
+      if (Date.now() - lastRequestsLoadRef.current < 60_000) return;
+      void loadModelRequests();
     };
     window.addEventListener("online", handleOnline);
     document.addEventListener("visibilitychange", handleVisible);
@@ -3570,7 +3574,7 @@ export default function AdminDashboard() {
     // loadModelRequests intentionally uses the current dashboard state and is
     // invoked only from realtime/online events while this tab is mounted.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, user]);
+  }, [user]);
 
   // ==== Follow-up helpers (Custom Anfragen) ====
   const FOLLOWUP_THRESHOLD_DAYS = 2;
