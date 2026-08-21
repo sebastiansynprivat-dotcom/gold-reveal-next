@@ -3486,6 +3486,11 @@ export default function AdminDashboard() {
             })
             .sort((a, b) => a.name.localeCompare(b.name));
           const _modelVerified = !!(r.model_id && _model && String(_model.id) === String(r.model_id));
+          const prevReq: any = prevById.get(r.id) || {};
+          const preserved: Record<string, any> = {};
+          for (const k of LOCAL_UI_KEYS) {
+            if (prevReq[k] !== undefined) preserved[k] = prevReq[k];
+          }
           return {
             ...r,
             // Canonical name wins over the stored free text once the link is verified.
@@ -3504,11 +3509,10 @@ export default function AdminDashboard() {
             _chatterDeleted: !!info?.deleted,
             _chatterDeletedAt: info?.deleted_at || null,
             _chatterKnown: !!info,
+            ...preserved,
           };
-
-
-        }),
-      );
+        });
+      });
     }
     setModelRequestsLoaded(true);
   };
