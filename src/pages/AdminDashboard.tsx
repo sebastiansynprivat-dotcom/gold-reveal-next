@@ -7199,7 +7199,10 @@ export default function AdminDashboard() {
                     {modelRequests.filter((r) => {
                       if (unreadOnly) {
                         if (!isReqUnreadForMe(r)) return false;
-                        if (r.status === "archived" || r.status === "rejected") return false;
+                        // Auch archivierte/abgelehnte Anfragen anzeigen, wenn ein
+                        // neuer Chatter-Kommentar ungelesen ist — sonst gehen
+                        // Rückmeldungen verloren (Badge zählte, Liste blieb leer).
+
                       } else {
                         if (requestFilter === "followup_due") {
                           if (!needsFollowUp(r)) return false;
