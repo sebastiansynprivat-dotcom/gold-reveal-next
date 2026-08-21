@@ -3436,10 +3436,13 @@ export default function AdminDashboard() {
   // only loaded when the tab was opened, so chatter replies that arrived later
   // stayed invisible until a full page refresh.
   useEffect(() => {
-    if (!user || activeTab !== "anfragen") return;
+    // Nicht mehr an den Tab gebunden: sonst blieb der Ungelesen-Zähler und der
+    // Kommentarverlauf veraltet, solange ein anderer Tab offen war.
+    if (!user) return;
 
     // Always catch up on messages that arrived while this tab was closed.
     void loadModelRequests();
+
 
     let refreshTimer: ReturnType<typeof setTimeout> | undefined;
     const refreshRequests = () => {
