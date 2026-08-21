@@ -1250,33 +1250,31 @@ export default function AdminDashboard() {
     })();
   }, []);
 
-  // Load/persist seen-state for request comments per admin.
-  // IMPORTANT: never write before the stored value was loaded, otherwise a fresh
-  // mount (e.g. after a crash + re-login) overwrites the file with "{}".
+  // Load the durable per-admin read state from the backend. Browser storage is
+  // deliberately not authoritative: it is lost on logout, crashes and device changes.
   const seenLoadedRef = useRef(false);
   useEffect(() => {
     if (!user?.id) return;
     seenLoadedRef.current = false;
-    try {
-      const raw = localStorage.getItem(`admin_seen_request_msgs_${user.id}`);
-      setSeenRequestMsgs(raw ? JSON.parse(raw) : {});
-      const rawU = localStorage.getItem(`admin_unread_request_msgs_${user.id}`);
-      setPendingUnread(rawU ? JSON.parse(rawU) : {});
-    } catch {}
-    seenLoadedRef.current = true;
+    setSeenRequestMsgs({});
+    setPendingUnread({});
+    void (async () => {
+      const { data, error } = await (supabase as any)
+        .from("admin_request_read_states")
+        .select("request_id, last_read_at")
+        .eq("admin_id", user.id)
+        .range(0, 9999);
+      if (error) {
+        console.error("request read states could not be loaded", error);
+        toast.error("Gelesen-Status konnte nicht geladen werden – Kommentare bleiben als neu sichtbar.");
+      } else {
+        const next: Record<string, string> = {};
+        for (const row of data || []) next[row.request_id] = row.last_read_at;
+        setSeenRequestMsgs(next);
+      }
+      seenLoadedRef.current = true;
+    })();
   }, [user?.id]);
-  useEffect(() => {
-    if (!user?.id || !seenLoadedRef.current) return;
-    try {
-      localStorage.setItem(`admin_seen_request_msgs_${user.id}`, JSON.stringify(seenRequestMsgs));
-    } catch {}
-  }, [seenRequestMsgs, user?.id]);
-  useEffect(() => {
-    if (!user?.id || !seenLoadedRef.current) return;
-    try {
-      localStorage.setItem(`admin_unread_request_msgs_${user.id}`, JSON.stringify(pendingUnread));
-    } catch {}
-  }, [pendingUnread, user?.id]);
 
   // Load/persist message reactions per admin
   useEffect(() => {
@@ -1317,7 +1315,7 @@ export default function AdminDashboard() {
   }, [seenRequestMsgs, getUnreadStamp]);
   const markReqSeen = useCallback((req: any) => {
     const stamp = getUnreadStamp(req);
-    if (!stamp) return;
+    if (!stamp || !user?.id) return;
     setSeenRequestMsgs((prev) => (prev[req.id] === stamp ? prev : { ...prev, [req.id]: stamp }));
     setPendingUnread((prev) => {
       if (!prev[req.id]) return prev;
@@ -1325,7 +1323,24 @@ export default function AdminDashboard() {
       delete next[req.id];
       return next;
     });
-  }, [getUnreadStamp]);
+    void (supabase as any)
+      .from("admin_request_read_states")
+      .upsert(
+        { admin_id: user.id, request_id: req.id, last_read_at: stamp },
+        { onConflict: "admin_id,request_id" },
+      )
+      .then(({ error }: { error: any }) => {
+        if (error) {
+          console.error("request read state could not be saved", error);
+          toast.error("Gelesen-Status konnte nicht gespeichert werden.");
+          setSeenRequestMsgs((prev) => {
+            const next = { ...prev };
+            delete next[req.id];
+            return next;
+          });
+        }
+      });
+  }, [getUnreadStamp, user?.id]);
 
   // Remember every freshly detected unread comment so it survives reloads,
   // logouts and incomplete message loads.
