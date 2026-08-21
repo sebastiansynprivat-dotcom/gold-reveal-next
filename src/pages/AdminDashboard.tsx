@@ -7251,7 +7251,9 @@ export default function AdminDashboard() {
                           .filter((r) => {
                             if (unreadOnly) {
                               if (!isReqUnreadForMe(r)) return false;
-                              if (r.status === "archived" || r.status === "rejected") return false;
+                              // siehe oben: ungelesene Kommentare bleiben sichtbar,
+                              // auch bei archiviert/abgelehnt
+
                             } else {
                               if (requestFilter === "followup_due") {
                                 if (!needsFollowUp(r)) return false;
