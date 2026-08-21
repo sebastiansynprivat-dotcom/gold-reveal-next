@@ -1407,10 +1407,14 @@ export default function AdminDashboard() {
   const myAdminName = ((user?.id ? adminNames[user.id] : "") || "").toLowerCase();
   const isReqForMe = useCallback((req: any): boolean => {
     const platform = getReqPlatform(req);
+    // Ohne Plattform-Tag darf keine Zuständigkeitsregel greifen — sonst
+    // verschwinden neue Kommentare bei allen Admins.
+    if (!platform) return true;
     if (myAdminName.includes("vanessa")) return platform === "maloum";
     if (myAdminName.includes("max")) return platform !== "maloum";
     return true;
   }, [myAdminName, getReqPlatform]);
+
   const isReqUnreadForMe = useCallback(
     (req: any) => isReqUnread(req) && isReqForMe(req),
     [isReqUnread, isReqForMe],
