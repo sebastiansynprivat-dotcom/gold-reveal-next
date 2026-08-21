@@ -3514,6 +3514,7 @@ export default function AdminDashboard() {
         });
       });
     }
+    lastRequestsLoadRef.current = Date.now();
     setModelRequestsLoaded(true);
   };
 
