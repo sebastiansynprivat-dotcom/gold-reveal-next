@@ -302,6 +302,41 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_request_read_states: {
+        Row: {
+          admin_id: string
+          created_at: string
+          id: string
+          last_read_at: string
+          request_id: string
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          id?: string
+          last_read_at: string
+          request_id: string
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          id?: string
+          last_read_at?: string
+          request_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_request_read_states_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "model_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_totp_secrets: {
         Row: {
           created_at: string
