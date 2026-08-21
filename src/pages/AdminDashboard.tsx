@@ -970,6 +970,9 @@ export default function AdminDashboard() {
   const adminDataBootstrapRef = useRef(false);
   const [modelRequests, setModelRequests] = useState<any[]>([]);
   const [modelRequestsLoaded, setModelRequestsLoaded] = useState(false);
+  // Zeitpunkt des letzten Anfragen-Loads – verhindert ein komplettes Neuladen,
+  // wenn man nur kurz aus der App raus und wieder rein wechselt.
+  const lastRequestsLoadRef = useRef(0);
   const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "waiting_feedback" | "rejected" | "archived" | "followup_due">(
     "all",
   );
