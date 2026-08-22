@@ -1555,6 +1555,7 @@ export default function AdminDashboard() {
     maloum: number;
     brezzels: number;
     "4based": number;
+    admireme: number;
     // fansyme: number;
   }
 
@@ -1567,6 +1568,7 @@ export default function AdminDashboard() {
     maloum: DailyTotal[];
     "4based": DailyTotal[];
     brezzels: DailyTotal[];
+    admireme: DailyTotal[];
     // fansyme: DailyTotal[];
   }
 
@@ -1577,14 +1579,15 @@ export default function AdminDashboard() {
     const normalized = String(value || "").trim().toLowerCase();
     return normalized === "shex" || normalized === "syn" ? normalized : null;
   };
-  const normalizePlatform = (value: unknown): "maloum" | "brezzels" | "4based" | null => {
+  const normalizePlatform = (value: unknown): "maloum" | "brezzels" | "4based" | "admireme" | null => {
     const normalized = String(value || "").trim().toLowerCase();
     if (normalized === "fourbased" || normalized === "4based") return "4based";
+    if (normalized === "admireme" || normalized === "admire.me") return "admireme";
     if (normalized === "maloum" || normalized === "brezzels") return normalized;
     return null;
   };
 
-  const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
+  const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [], admireme: [] });
   const revenueCacheKey = "admin_revenue_cache_v8";
   const revenueRowsKey = "admin_revenue_rows_v9";
 
