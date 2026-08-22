@@ -3618,7 +3618,7 @@ export type Database = {
         | "fanvue_partner"
         | "fanvue_model"
         | "socialmedia_marketer"
-      platform: "new" | "maloum" | "4based" | "brezzels"
+      platform: "new" | "maloum" | "4based" | "brezzels" | "admireme"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3757,7 +3757,7 @@ export const Constants = {
         "fanvue_model",
         "socialmedia_marketer",
       ],
-      platform: ["new", "maloum", "4based", "brezzels"],
+      platform: ["new", "maloum", "4based", "brezzels", "admireme"],
     },
   },
 } as const
