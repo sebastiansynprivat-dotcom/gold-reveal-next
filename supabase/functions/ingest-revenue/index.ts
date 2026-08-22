@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const ALLOWED_PLATFORMS = ["new", "maloum", "4based", "brezzels"];
+const ALLOWED_PLATFORMS = ["new", "maloum", "4based", "brezzels", "admireme"];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
