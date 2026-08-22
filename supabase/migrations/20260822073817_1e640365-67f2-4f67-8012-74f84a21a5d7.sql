@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.sync_admireme_revenue_report() FROM PUBLIC, anon, authenticated;

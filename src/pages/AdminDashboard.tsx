@@ -186,8 +186,8 @@ type TimeFilter = "heute" | "gestern" | "7" | "30" | "90" | "custom" | "vergleic
 
 interface ComparePeriodResult {
   total: number;
-  byPlatform: { maloum: number; brezzels: number; "4based": number };
-  daily: Array<{ date: string; total: number; maloum: number; brezzels: number; "4based": number }>;
+  byPlatform: { maloum: number; brezzels: number; "4based": number; admireme: number };
+  daily: Array<{ date: string; total: number; maloum: number; brezzels: number; "4based": number; admireme: number }>;
   activeDays: number;
   bestDay: { date: string; total: number };
   avgPerDay: number;
@@ -1555,6 +1555,7 @@ export default function AdminDashboard() {
     maloum: number;
     brezzels: number;
     "4based": number;
+    admireme: number;
     // fansyme: number;
   }
 
@@ -1567,6 +1568,7 @@ export default function AdminDashboard() {
     maloum: DailyTotal[];
     "4based": DailyTotal[];
     brezzels: DailyTotal[];
+    admireme: DailyTotal[];
     // fansyme: DailyTotal[];
   }
 
@@ -1577,16 +1579,17 @@ export default function AdminDashboard() {
     const normalized = String(value || "").trim().toLowerCase();
     return normalized === "shex" || normalized === "syn" ? normalized : null;
   };
-  const normalizePlatform = (value: unknown): "maloum" | "brezzels" | "4based" | null => {
+  const normalizePlatform = (value: unknown): "maloum" | "brezzels" | "4based" | "admireme" | null => {
     const normalized = String(value || "").trim().toLowerCase();
     if (normalized === "fourbased" || normalized === "4based") return "4based";
+    if (normalized === "admireme" || normalized === "admire.me") return "admireme";
     if (normalized === "maloum" || normalized === "brezzels") return normalized;
     return null;
   };
 
-  const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
-  const revenueCacheKey = "admin_revenue_cache_v8";
-  const revenueRowsKey = "admin_revenue_rows_v9";
+  const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [], admireme: [] });
+  const revenueCacheKey = "admin_revenue_cache_v9";
+  const revenueRowsKey = "admin_revenue_rows_v10";
 
   // Wrap cache by agency filter so a stale snapshot from a different filter
   // (e.g. "all") can never be displayed when the user selects "shex"/"syn".
@@ -1621,7 +1624,7 @@ export default function AdminDashboard() {
 
   //revenue state
   const [range, setRange] = useState<RootData>(() => initialRevenueCache.heute?.range || emptyRevenueRange());
-  const [totalValue, setTotalValue] = useState<CurrentTotal>(() => initialRevenueCache.heute?.total || { maloum: 0, brezzels: 0, "4based": 0 });
+  const [totalValue, setTotalValue] = useState<CurrentTotal>(() => initialRevenueCache.heute?.total || { maloum: 0, brezzels: 0, "4based": 0, admireme: 0 });
   const [totalEarnings, setTotalEarnings] = useState(() => initialRevenueCache.heute?.totalEarnings || 0);
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
@@ -1758,7 +1761,7 @@ export default function AdminDashboard() {
       : f === "30" ? sorted.filter((r) => r.date >= start(30) && r.date <= today)
       : f === "7" ? sorted.filter((r) => r.date >= start(7) && r.date <= today)
       : sorted.filter((r) => r.date >= start(7) && r.date <= today);
-    const platforms = ["maloum", "brezzels", "4based"] as const;
+    const platforms = ["maloum", "brezzels", "4based", "admireme"] as const;
     const total = platforms.reduce((acc, platform) => {
       const platformRows = rowsForRange.filter((r) => normalizePlatform(r.platform) === platform);
       const value = f === "heute" || f === "gestern"
@@ -1773,7 +1776,7 @@ export default function AdminDashboard() {
         .map((r) => ({ date: r.date, total: effectiveRevenue(r) }))
         .slice(f === "gestern" ? -3 : f === "heute" ? -7 : undefined),
     }), {} as RootData);
-    return { total, range, totalEarnings: total.maloum + total.brezzels + total["4based"] };
+    return { total, range, totalEarnings: total.maloum + total.brezzels + total["4based"] + total.admireme };
   }, [effectiveRevenue]);
 
   const rebuildStandardRevenueCache = useCallback((rows: RevenueRow[]) => {
@@ -1842,18 +1845,20 @@ export default function AdminDashboard() {
       maloum: revenueTotal("maloum", data),
       brezzels: revenueTotal("brezzels", data),
       "4based": revenueTotal("4based", data),
+      admireme: revenueTotal("admireme", data),
     };
 
     const range = {
       maloum: revenueRange("maloum", data),
       brezzels: revenueRange("brezzels", data),
       "4based": revenueRange("4based", data),
+      admireme: revenueRange("admireme", data),
     };
 
     setTotalValue(total);
     setRange(range);
 
-    const sumTotal = total.maloum + total["4based"] + total.brezzels;
+    const sumTotal = total.maloum + total["4based"] + total.brezzels + total.admireme;
     setTotalEarnings(sumTotal);
     flag == "today" ? setTimeFilter("heute") : setTimeFilter("gestern");
 
@@ -1896,18 +1901,20 @@ export default function AdminDashboard() {
       maloum: revenueTotal("maloum", data),
       brezzels: revenueTotal("brezzels", data),
       "4based": revenueTotal("4based", data),
+      admireme: revenueTotal("admireme", data),
     };
 
     const range = {
       maloum: revenueRange("maloum", data),
       brezzels: revenueRange("brezzels", data),
       "4based": revenueRange("4based", data),
+      admireme: revenueRange("admireme", data),
     };
 
     setTotalValue(total);
     setRange(range);
 
-    const sumTotal = total.maloum + total["4based"] + total.brezzels;
+    const sumTotal = total.maloum + total["4based"] + total.brezzels + total.admireme;
     setTotalEarnings(sumTotal);
   }
   async function getRevenueRangebyDates(dateRange) {
@@ -1935,18 +1942,20 @@ export default function AdminDashboard() {
       maloum: revenueTotal("maloum", data),
       brezzels: revenueTotal("brezzels", data),
       "4based": revenueTotal("4based", data),
+      admireme: revenueTotal("admireme", data),
     };
 
     const range = {
       maloum: revenueRange("maloum", data),
       brezzels: revenueRange("brezzels", data),
       "4based": revenueRange("4based", data),
+      admireme: revenueRange("admireme", data),
     };
 
     setTotalValue(total);
     setRange(range);
 
-    const sumTotal = total.maloum + total["4based"] + total.brezzels;
+    const sumTotal = total.maloum + total["4based"] + total.brezzels + total.admireme;
     setTotalEarnings(sumTotal);
   }
 
@@ -1973,8 +1982,8 @@ export default function AdminDashboard() {
       return filtered.map((x: any) => ({ date: x.date, total: effectiveRevenue(x) })).slice(flag === "today" ? -7 : -3);
     };
     const total = buildRevenueSnapshot(data as RevenueRow[], flag === "today" ? "heute" : "gestern").total;
-    const rng = { maloum: revenueRange("maloum"), brezzels: revenueRange("brezzels"), "4based": revenueRange("4based") } as RootData;
-    return { total, range: rng, totalEarnings: total.maloum + total.brezzels + total["4based"] };
+    const rng = { maloum: revenueRange("maloum"), brezzels: revenueRange("brezzels"), "4based": revenueRange("4based"), admireme: revenueRange("admireme") } as RootData;
+    return { total, range: rng, totalEarnings: total.maloum + total.brezzels + total["4based"] + total.admireme };
   }
 
   async function computeRangeSnapshot(flag: "7" | "30" | "90"): Promise<RevenueSnapshot | null> {
@@ -1994,8 +2003,8 @@ export default function AdminDashboard() {
     const revenueRange = (platform: string) =>
       data.filter((x: any) => normalizePlatform(x.platform) === platform).map((x: any) => ({ date: x.date, total: effectiveRevenue(x) }));
     const total = buildRevenueSnapshot(data as RevenueRow[], flag).total;
-    const rng = { maloum: revenueRange("maloum"), brezzels: revenueRange("brezzels"), "4based": revenueRange("4based") } as RootData;
-    return { total, range: rng, totalEarnings: total.maloum + total.brezzels + total["4based"] };
+    const rng = { maloum: revenueRange("maloum"), brezzels: revenueRange("brezzels"), "4based": revenueRange("4based"), admireme: revenueRange("admireme") } as RootData;
+    return { total, range: rng, totalEarnings: total.maloum + total.brezzels + total["4based"] + total.admireme };
   }
 
   const applySnapshot = (snap: RevenueSnapshot, instantRange = false) => {
@@ -2097,7 +2106,7 @@ export default function AdminDashboard() {
     pending.clear();
 
     const patchRange = (source: RootData | undefined, platform: string, date: string, nextValue: number): RootData => {
-      const next = (source ? { ...source } : { maloum: [], brezzels: [], "4based": [] }) as RootData;
+      const next = (source ? { ...source } : { maloum: [], brezzels: [], "4based": [], admireme: [] }) as RootData;
       const rows = [...(((next as any)[platform] || []) as DailyTotal[])];
       const rowIndex = rows.findIndex((row) => row.date === date);
       if (rowIndex >= 0) rows[rowIndex] = { ...rows[rowIndex], total: nextValue };
@@ -2115,7 +2124,7 @@ export default function AdminDashboard() {
         todaySnap = {
           total: nextTotal,
           range: patchRange(todaySnap.range, u.platform, u.date, u.nextValue),
-          totalEarnings: nextTotal.maloum + nextTotal.brezzels + nextTotal["4based"],
+          totalEarnings: nextTotal.maloum + nextTotal.brezzels + nextTotal["4based"] + nextTotal.admireme,
         };
       }
     }
@@ -2236,13 +2245,13 @@ export default function AdminDashboard() {
       .gte("date", fromStr)
       .lte("date", toStr);
     const rows = data || [];
-    const dateMap: Record<string, { date: string; total: number; maloum: number; brezzels: number; "4based": number }> = {};
+    const dateMap: Record<string, { date: string; total: number; maloum: number; brezzels: number; "4based": number; admireme: number }> = {};
     for (const row of rows) {
       const d = row.date as string;
-      if (!dateMap[d]) dateMap[d] = { date: d, total: 0, maloum: 0, brezzels: 0, "4based": 0 };
+      if (!dateMap[d]) dateMap[d] = { date: d, total: 0, maloum: 0, brezzels: 0, "4based": 0, admireme: 0 };
       const amount = effectiveRevenue(row);
-      const plat = row.platform as "maloum" | "brezzels" | "4based";
-      if (plat === "maloum" || plat === "brezzels" || plat === "4based") {
+      const plat = normalizePlatform(row.platform);
+      if (plat) {
         dateMap[d][plat] += amount;
         dateMap[d].total += amount;
       }
@@ -2252,8 +2261,9 @@ export default function AdminDashboard() {
       maloum: daily.reduce((s, d) => s + d.maloum, 0),
       brezzels: daily.reduce((s, d) => s + d.brezzels, 0),
       "4based": daily.reduce((s, d) => s + d["4based"], 0),
+      admireme: daily.reduce((s, d) => s + d.admireme, 0),
     };
-    const total = byPlatform.maloum + byPlatform.brezzels + byPlatform["4based"];
+    const total = byPlatform.maloum + byPlatform.brezzels + byPlatform["4based"] + byPlatform.admireme;
     const activeDays = daily.filter((d) => d.total > 0).length;
     const bestDay = daily.reduce((b, d) => (d.total > b.total ? { date: d.date, total: d.total } : b), { date: "", total: 0 });
     const avgPerDay = activeDays > 0 ? Math.round(total / activeDays) : 0;
@@ -5064,7 +5074,7 @@ export default function AdminDashboard() {
                       if (k !== "date") found.add(k);
                     });
                   });
-                  const base = ["maloum", "brezzels", "4based"];
+                  const base = ["maloum", "brezzels", "4based", "admireme"];
                   const ordered = base.filter((k) => found.has(k));
                   Array.from(found).forEach((k) => {
                     if (!ordered.includes(k)) ordered.push(k);
@@ -5225,7 +5235,7 @@ export default function AdminDashboard() {
                   )}
 
                   {timeFilter === "vergleich" && (() => {
-                    const platformLabels: Record<string, string> = { maloum: "Maloum", brezzels: "Brezzels", "4based": "4Based" };
+                    const platformLabels: Record<string, string> = { maloum: "Maloum", brezzels: "Brezzels", "4based": "4Based", admireme: "Admireme" };
                     const fmtDateLabel = (d?: Date) => (d ? format(d, "dd.MM.yyyy") : "—");
                     const fmtBest = (d: string) => { try { return format(new Date(d), "dd.MM."); } catch { return d || "—"; } };
 
@@ -5378,7 +5388,7 @@ export default function AdminDashboard() {
                                 <span>{compareB.bestDay.date ? fmtBest(compareB.bestDay.date) : "—"}</span>
                               </div>
                               <KpiRow label="Aktive Tage" valueA={compareA.activeDays} valueB={compareB.activeDays} />
-                              {(["maloum", "brezzels", "4based"] as const).map((p) => (
+                              {(["maloum", "brezzels", "4based", "admireme"] as const).map((p) => (
                                 <KpiRow key={p} label={platformLabels[p]} valueA={compareA.byPlatform[p]} valueB={compareB.byPlatform[p]} accent />
                               ))}
                             </motion.div>
@@ -5483,10 +5493,10 @@ export default function AdminDashboard() {
                   {/* PREMIUM PLATFORM TILES */}
                   <motion.div
                     variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
-                    className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
                   >
                     {platformKeys.map((key) => {
-                      const label = key === "4based" ? "4Based" : key.charAt(0).toUpperCase() + key.slice(1);
+                      const label = key === "4based" ? "4Based" : key === "admireme" ? "Admireme" : key.charAt(0).toUpperCase() + key.slice(1);
                       const color = (PLATFORM_COLORS as any)[key];
                       const value = (totalValue as any)[key] || 0;
                       const share = totalEarnings > 0 ? Math.round((value / totalEarnings) * 100) : 0;
