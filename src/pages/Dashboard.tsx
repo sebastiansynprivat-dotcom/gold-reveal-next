@@ -50,6 +50,7 @@ import {
   Trophy,
   AlertTriangle,
   VolumeX,
+  Info,
 } from "lucide-react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import {
