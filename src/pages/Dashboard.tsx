@@ -50,6 +50,7 @@ import {
   Trophy,
   AlertTriangle,
   VolumeX,
+  Info,
 } from "lucide-react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import {
@@ -261,7 +262,7 @@ export default function Dashboard() {
   const platform = searchParams.get("platform") || "Brezzels";
 
   const { user } = useAuth();
-  const { lang } = useUILanguage();
+  const { lang, t } = useUILanguage();
 
   // Role-guard: if this user isn't a chatter (e.g. a fanvue_model who installed
   // the PWA from the root manifest and landed on /dashboard), redirect them to
@@ -1366,6 +1367,14 @@ export default function Dashboard() {
               </p>
             </motion.div>
           </motion.div>
+
+          {/* Billing disclaimer: billing basis is always account statistics */}
+          <div className="mt-3 flex items-start gap-2 rounded-xl border border-accent/20 bg-accent/5 px-3 py-2.5">
+            <Info className="h-3.5 w-3.5 text-accent shrink-0 mt-0.5" />
+            <p className="text-[11px] text-muted-foreground leading-snug">
+              {t("dashboard.billingDisclaimer")}
+            </p>
+          </div>
 
           {/* Elite-Tracking: 25% gilt nur ab 3.000 € Monatsumsatz mit EINEM Model */}
           {perModelLoaded && perModelMonthly.length > 0 && !isChampionsLeague && (

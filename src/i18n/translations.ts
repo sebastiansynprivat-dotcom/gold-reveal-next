@@ -50,6 +50,7 @@ export const dict: Dict = {
   "dashboard.viewAll": { de: "Alle ansehen", en: "View all" },
   "dashboard.showMore": { de: "Mehr anzeigen", en: "Show more" },
   "dashboard.showLess": { de: "Weniger anzeigen", en: "Show less" },
+  "dashboard.billingDisclaimer": { de: "Abrechnungsgrundlage ist immer die Statistik aus deinem Account.", en: "The billing basis is always the statistics from your account." },
 
   // --- Daily Checklist ---
   "checklist.title": { de: "Tägliche Aufgaben", en: "Daily tasks" },
