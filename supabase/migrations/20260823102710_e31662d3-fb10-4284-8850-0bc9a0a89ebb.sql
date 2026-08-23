@@ -1,0 +1,1 @@
+ALTER TABLE public.payout_revenue ADD COLUMN IF NOT EXISTS admireme_revenue numeric DEFAULT 0;

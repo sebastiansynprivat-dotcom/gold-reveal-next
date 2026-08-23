@@ -1,0 +1,1 @@
+ALTER TABLE public.models ADD COLUMN IF NOT EXISTS revenue_percentage_admireme numeric NOT NULL DEFAULT 0;

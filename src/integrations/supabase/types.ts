@@ -2536,6 +2536,7 @@ export type Database = {
           referral_source: string
           referrer_tag: string
           revenue_percentage: number
+          revenue_percentage_admireme: number
           revenue_percentage_brezzels: number
           revenue_percentage_fourbased: number
           revenue_percentage_maloum: number
@@ -2588,6 +2589,7 @@ export type Database = {
           referral_source?: string
           referrer_tag?: string
           revenue_percentage?: number
+          revenue_percentage_admireme?: number
           revenue_percentage_brezzels?: number
           revenue_percentage_fourbased?: number
           revenue_percentage_maloum?: number
@@ -2640,6 +2642,7 @@ export type Database = {
           referral_source?: string
           referrer_tag?: string
           revenue_percentage?: number
+          revenue_percentage_admireme?: number
           revenue_percentage_brezzels?: number
           revenue_percentage_fourbased?: number
           revenue_percentage_maloum?: number
@@ -2733,6 +2736,7 @@ export type Database = {
       }
       payout_revenue: {
         Row: {
+          admireme_revenue: number | null
           billed_amount: number | null
           billed_at: string | null
           billed_credit_note_number: string | null
@@ -2752,6 +2756,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          admireme_revenue?: number | null
           billed_amount?: number | null
           billed_at?: string | null
           billed_credit_note_number?: string | null
@@ -2771,6 +2776,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          admireme_revenue?: number | null
           billed_amount?: number | null
           billed_at?: string | null
           billed_credit_note_number?: string | null

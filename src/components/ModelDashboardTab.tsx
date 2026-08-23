@@ -181,6 +181,7 @@ interface ModelRow {
   revenue_percentage_fourbased?: number;
   revenue_percentage_maloum?: number;
   revenue_percentage_brezzels?: number;
+  revenue_percentage_admireme?: number;
   fourbased_payout_configured?: boolean;
   crypto_address: string;
   currency: string;
@@ -556,7 +557,7 @@ export default function ModelDashboardTab() {
   // Revenue from model_dashboard (per-platform)
   const [dashboardRevenues, setDashboardRevenues] = useState<Record<string, number>>({});
   const [platformRevenues, setPlatformRevenues] = useState<
-    Record<string, { fourbased: number; maloum: number; brezzels: number }>
+    Record<string, { fourbased: number; maloum: number; brezzels: number; admireme: number }>
   >({});
 
   // ─── Revenue period filter (UI only, not yet wired to historical data) ───
@@ -588,7 +589,7 @@ export default function ModelDashboardTab() {
   });
   const [shareCalculated, setShareCalculated] = useState(false);
   const [billingShare, setBillingShare] = useState(0);
-  const [payoutRevenueForMonth, setPayoutRevenueForMonth] = useState<{ fourbased: number; maloum: number; brezzels: number } | null>(null);
+  const [payoutRevenueForMonth, setPayoutRevenueForMonth] = useState<{ fourbased: number; maloum: number; brezzels: number; admireme: number } | null>(null);
   const [calcTrigger, setCalcTrigger] = useState(0);
 
   // ─── Revenue fetch (external backend) ───
@@ -604,6 +605,7 @@ export default function ModelDashboardTab() {
     fourbased: number | null;
     maloum: number | null;
     brezzels: number | null;
+    admireme: number | null;
   } | null>(null);
   const [fetchRevenueTick, setFetchRevenueTick] = useState(0);
   // Per-platform errors from the last fetch (e.g. password incorrect)
@@ -614,7 +616,7 @@ export default function ModelDashboardTab() {
     month: number;
     year: number;
     fetching: boolean;
-    data: { fourbased: number | null; maloum: number | null; brezzels: number | null } | null;
+    data: { fourbased: number | null; maloum: number | null; brezzels: number | null; admireme: number | null } | null;
     billedAt: string | null;
     billedNumber: string | null;
     errors: Record<string, { code?: string; message: string }>;
@@ -629,6 +631,7 @@ export default function ModelDashboardTab() {
     fourbased_revenue: number | null;
     maloum_revenue: number | null;
     brezzels_revenue: number | null;
+    admireme_revenue: number | null;
     billed_at: string | null;
     billed_credit_note_number: string | null;
     billed_amount: number | null;
@@ -893,7 +896,7 @@ export default function ModelDashboardTab() {
       for (const id of accountIds) sums[id] = 0;
       // Aggregate platform totals (active accounts get per-id totals; archived
       // contributions are merged by platform so they still appear in the breakdown).
-      let archivedFourbased = 0, archivedMaloum = 0, archivedBrezzels = 0;
+      let archivedFourbased = 0, archivedMaloum = 0, archivedBrezzels = 0, archivedAdmireme = 0;
       for (const r of (data || []) as Array<{ account_id: string | null; model_id: string | null; platform: string | null; total: number | string }>) {
         const amt = Number(r.total || 0);
         if (r.account_id && sums[r.account_id] !== undefined) {
@@ -905,23 +908,26 @@ export default function ModelDashboardTab() {
           if (plat === "4Based") archivedFourbased += amt;
           else if (plat === "Maloum") archivedMaloum += amt;
           else if (plat === "Brezzels") archivedBrezzels += amt;
+          else if (plat === "Admireme") archivedAdmireme += amt;
         }
       }
       setDashboardRevenues(sums);
-      const platMap: Record<string, { fourbased: number; maloum: number; brezzels: number }> = {};
+      const platMap: Record<string, { fourbased: number; maloum: number; brezzels: number; admireme: number }> = {};
       for (const acc of modelAccounts) {
         const v = sums[acc.id] || 0;
         platMap[acc.id] = {
           fourbased: acc.platform === "4Based" ? v : 0,
           maloum: acc.platform === "Maloum" ? v : 0,
           brezzels: acc.platform === "Brezzels" ? v : 0,
+          admireme: acc.platform === "Admireme" ? v : 0,
         };
       }
-      if (archivedFourbased || archivedMaloum || archivedBrezzels) {
+      if (archivedFourbased || archivedMaloum || archivedBrezzels || archivedAdmireme) {
         platMap["__archived__"] = {
           fourbased: archivedFourbased,
           maloum: archivedMaloum,
           brezzels: archivedBrezzels,
+          admireme: archivedAdmireme,
         };
       }
       setPlatformRevenues(platMap);
@@ -938,7 +944,7 @@ export default function ModelDashboardTab() {
     (async () => {
       const { data, error } = await (supabase as any)
         .from("payout_revenue")
-        .select("fourbased_revenue, maloum_revenue, brezzels_revenue")
+        .select("fourbased_revenue, maloum_revenue, brezzels_revenue, admireme_revenue")
         .eq("model_id", selectedModelId)
         .eq("last_fetched_month", fetchMonth)
         .eq("last_fetched_year", fetchYear)
@@ -951,6 +957,7 @@ export default function ModelDashboardTab() {
         fourbased: Number((data as any).fourbased_revenue) || 0,
         maloum: Number((data as any).maloum_revenue) || 0,
         brezzels: Number((data as any).brezzels_revenue) || 0,
+        admireme: Number((data as any).admireme_revenue) || 0,
       });
     })();
   }, [selectedModelId, fetchMonth, fetchYear, fetchRevenueTick]);
@@ -961,7 +968,7 @@ export default function ModelDashboardTab() {
     (async () => {
       const { data } = await (supabase as any)
         .from("payout_revenue")
-        .select("id, last_fetched_month, last_fetched_year, monthly_revenue, fourbased_revenue, maloum_revenue, brezzels_revenue, billed_at, billed_credit_note_number, billed_amount, billed_snapshot, last_fetched_at, billing_in_progress")
+        .select("id, last_fetched_month, last_fetched_year, monthly_revenue, fourbased_revenue, maloum_revenue, brezzels_revenue, admireme_revenue, billed_at, billed_credit_note_number, billed_amount, billed_snapshot, last_fetched_at, billing_in_progress")
         .eq("model_id", selectedModelId)
         .order("last_fetched_year", { ascending: false })
         .order("last_fetched_month", { ascending: false });
@@ -973,6 +980,7 @@ export default function ModelDashboardTab() {
         fourbased_revenue: r.fourbased_revenue,
         maloum_revenue: r.maloum_revenue,
         brezzels_revenue: r.brezzels_revenue,
+        admireme_revenue: r.admireme_revenue,
         billed_at: r.billed_at,
         billed_credit_note_number: r.billed_credit_note_number,
         billed_amount: r.billed_amount,
@@ -991,7 +999,7 @@ export default function ModelDashboardTab() {
       const updated = await Promise.all(extraBillings.map(async (eb) => {
         const { data } = await (supabase as any)
           .from("payout_revenue")
-          .select("fourbased_revenue, maloum_revenue, brezzels_revenue, billed_at, billed_credit_note_number")
+          .select("fourbased_revenue, maloum_revenue, brezzels_revenue, admireme_revenue, billed_at, billed_credit_note_number")
           .eq("model_id", selectedModelId)
           .eq("last_fetched_month", eb.month)
           .eq("last_fetched_year", eb.year)
@@ -1003,6 +1011,7 @@ export default function ModelDashboardTab() {
             fourbased: Number((data as any).fourbased_revenue) || 0,
             maloum: Number((data as any).maloum_revenue) || 0,
             brezzels: Number((data as any).brezzels_revenue) || 0,
+            admireme: Number((data as any).admireme_revenue) || 0,
           },
           billedAt: (data as any).billed_at || null,
           billedNumber: (data as any).billed_credit_note_number || null,
@@ -1306,10 +1315,12 @@ export default function ModelDashboardTab() {
     const fb = fetchedPayoutRevenue.fourbased ?? 0;
     const ml = fetchedPayoutRevenue.maloum ?? 0;
     const br = fetchedPayoutRevenue.brezzels ?? 0;
+    const am = fetchedPayoutRevenue.admireme ?? 0;
     const fallback = modelForm.revenue_percentage || 0;
     const pctFb = modelForm.revenue_percentage_fourbased || fallback;
     const pctMl = modelForm.revenue_percentage_maloum || fallback;
     const pctBr = modelForm.revenue_percentage_brezzels || fallback;
+    const pctAm = modelForm.revenue_percentage_admireme || fallback;
     const customsTotal = customPlatforms.reduce((s, cp) => {
       const pct = cp.percentage > 0 ? cp.percentage : fallback;
       return s + (cp.revenue || 0) * pct / 100;
@@ -1318,17 +1329,19 @@ export default function ModelDashboardTab() {
     let fbTotal = fb;
     let mlTotal = ml;
     let brTotal = br;
+    let amTotal = am;
     for (const eb of extraBillings) {
       if (!eb.data) continue;
       fbTotal += eb.data.fourbased || 0;
       mlTotal += eb.data.maloum || 0;
       brTotal += eb.data.brezzels || 0;
+      amTotal += eb.data.admireme || 0;
     }
     const fbInBase = convertToBase(fbTotal, "USD");
-    const calculatedRaw = (fbInBase * pctFb) / 100 + (mlTotal * pctMl) / 100 + (brTotal * pctBr) / 100 + customsTotal;
+    const calculatedRaw = (fbInBase * pctFb) / 100 + (mlTotal * pctMl) / 100 + (brTotal * pctBr) / 100 + (amTotal * pctAm) / 100 + customsTotal;
     const calculated = Math.round(calculatedRaw * 100) / 100;
     setBillingShare(calculated);
-    setPayoutRevenueForMonth({ fourbased: fbTotal, maloum: mlTotal, brezzels: brTotal });
+    setPayoutRevenueForMonth({ fourbased: fbTotal, maloum: mlTotal, brezzels: brTotal, admireme: amTotal });
     setShareCalculated(true);
 
     setModelForm((prev: any) => ({
@@ -1338,7 +1351,7 @@ export default function ModelDashboardTab() {
       invoice_currency: prev.currency || "EUR",
       invoice_payment_date: todayYmd(),
     }));
-  }, [fetchedPayoutRevenue, extraBillings, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, customPlatforms, convertToBase, fetchYear, fetchMonth]);
+  }, [fetchedPayoutRevenue, extraBillings, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, modelForm.revenue_percentage_admireme, customPlatforms, convertToBase, fetchYear, fetchMonth]);
 
   // ─── Service period spans earliest → latest selected month (main + all extras) ───
   // Runs whenever the month selection changes, independent of fetched revenue.
@@ -1365,17 +1378,18 @@ export default function ModelDashboardTab() {
   // ─── Per-model platform revenue (for selected model) — converted to base currency ───
   const selectedModelPlatformRevenue = useMemo(() => {
     if (!selectedModelId || modelAccounts.length === 0) return [];
-    const platformMap: Record<string, { fourbased: number; maloum: number; brezzels: number; total: number }> = {};
+    const platformMap: Record<string, { fourbased: number; maloum: number; brezzels: number; admireme: number; total: number }> = {};
     for (const acc of modelAccounts) {
       const pr = platformRevenues[acc.id];
       const rev = dashboardRevenues[acc.id] || 0;
       const accCur = getSourceCurrency(acc);
-      if (!platformMap[acc.platform]) platformMap[acc.platform] = { fourbased: 0, maloum: 0, brezzels: 0, total: 0 };
+      if (!platformMap[acc.platform]) platformMap[acc.platform] = { fourbased: 0, maloum: 0, brezzels: 0, admireme: 0, total: 0 };
       if (pr) {
         // fourbased fetched values are always in USD
         platformMap[acc.platform].fourbased += convertToBase(pr.fourbased, "USD");
         platformMap[acc.platform].maloum += convertToBase(pr.maloum, acc.currency || baseCurrency);
         platformMap[acc.platform].brezzels += convertToBase(pr.brezzels, acc.currency || baseCurrency);
+        platformMap[acc.platform].admireme += convertToBase(pr.admireme, acc.currency || baseCurrency);
       }
       platformMap[acc.platform].total += convertToBase(rev, accCur);
     }
@@ -1394,12 +1408,14 @@ export default function ModelDashboardTab() {
     const pctFb = modelForm.revenue_percentage_fourbased || fallback;
     const pctMl = modelForm.revenue_percentage_maloum || fallback;
     const pctBr = modelForm.revenue_percentage_brezzels || fallback;
+    const pctAm = modelForm.revenue_percentage_admireme || fallback;
     // Only use fetched/calculated payout revenue (never the live manual dashboard input).
     const source = payoutRevenueForMonth ?? (fetchedPayoutRevenue
       ? {
           fourbased: fetchedPayoutRevenue.fourbased ?? 0,
           maloum: fetchedPayoutRevenue.maloum ?? 0,
           brezzels: fetchedPayoutRevenue.brezzels ?? 0,
+          admireme: fetchedPayoutRevenue.admireme ?? 0,
         }
       : null);
     let sum = 0;
@@ -1408,13 +1424,14 @@ export default function ModelDashboardTab() {
       sum += convertToBase(source.fourbased || 0, "USD") * pctFb / 100;
       sum += (source.maloum || 0) * pctMl / 100;
       sum += (source.brezzels || 0) * pctBr / 100;
+      sum += (source.admireme || 0) * pctAm / 100;
     }
     for (const cp of customPlatforms) {
       const pct = cp.percentage > 0 ? cp.percentage : fallback;
       sum += (cp.revenue || 0) * pct / 100;
     }
     return Math.round(sum * 100) / 100;
-  }, [payoutRevenueForMonth, fetchedPayoutRevenue, customPlatforms, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, convertToBase]);
+  }, [payoutRevenueForMonth, fetchedPayoutRevenue, customPlatforms, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, modelForm.revenue_percentage_admireme, convertToBase]);
 
   // ─── Create model ───
   const handleCreateModel = async () => {
@@ -1524,6 +1541,7 @@ export default function ModelDashboardTab() {
         revenue_percentage_fourbased: modelForm.revenue_percentage_fourbased || 0,
         revenue_percentage_maloum: modelForm.revenue_percentage_maloum || 0,
         revenue_percentage_brezzels: modelForm.revenue_percentage_brezzels || 0,
+        revenue_percentage_admireme: modelForm.revenue_percentage_admireme || 0,
         fourbased_payout_configured: !!modelForm.fourbased_payout_configured,
         crypto_address: modelForm.crypto_address,
         currency: modelForm.currency,
@@ -2731,7 +2749,7 @@ export default function ModelDashboardTab() {
                   {/* Platform cards with editable revenue */}
                   <div className="space-y-2">
                     {modelAccounts.map((acc) => {
-                      const pr = platformRevenues[acc.id] || { fourbased: 0, maloum: 0, brezzels: 0 };
+                      const pr = platformRevenues[acc.id] || { fourbased: 0, maloum: 0, brezzels: 0, admireme: 0 };
                       const rev = dashboardRevenues[acc.id] || 0;
                       const colorMap: Record<string, string> = {
                         "4Based": "#22d3ee",
@@ -2747,6 +2765,7 @@ export default function ModelDashboardTab() {
                         "4Based": "fourbased_revenue",
                         Maloum: "maloum_revenue",
                         Brezzels: "brezzels_revenue",
+                        Admireme: "admireme_revenue",
                       };
                       const revenueField = platformFieldMap[acc.platform] || "monthly_revenue";
 
@@ -3177,6 +3196,7 @@ export default function ModelDashboardTab() {
                             fourbased: Number(savedRow.fourbased_revenue) || 0,
                             maloum: Number(savedRow.maloum_revenue) || 0,
                             brezzels: Number(savedRow.brezzels_revenue) || 0,
+                            admireme: Number(savedRow.admireme_revenue) || 0,
                           });
                           await loadModelAccounts(selectedModelId);
                           setLastFetchInfo({ at: new Date().toISOString(), month: fetchMonth, year: fetchYear });
@@ -3207,11 +3227,12 @@ export default function ModelDashboardTab() {
                       )}
                     </Button>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 pt-1 border-t border-accent/10">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-accent/10">
                     {[
                       { label: "4Based", key: "fourbased" as const, color: "text-blue-400" },
                       { label: "Maloum", key: "maloum" as const, color: "text-purple-400" },
                       { label: "Brezzels", key: "brezzels" as const, color: "text-orange-400" },
+                      { label: "AdmireMe", key: "admireme" as const, color: "text-pink-400" },
                     ].map((p) => {
                       const val = fetchedPayoutRevenue?.[p.key];
                       const hasRow = fetchedPayoutRevenue !== null;
@@ -3234,8 +3255,9 @@ export default function ModelDashboardTab() {
                   const fb = fetchedPayoutRevenue.fourbased ?? 0;
                   const ml = fetchedPayoutRevenue.maloum ?? 0;
                   const br = fetchedPayoutRevenue.brezzels ?? 0;
+                  const am = fetchedPayoutRevenue.admireme ?? 0;
                   const fbInBase = convertToBase(fb, "USD");
-                  const totalPayouts = fbInBase + ml + br;
+                  const totalPayouts = fbInBase + ml + br + am;
                   const startD = new Date(fetchYear, fetchMonth - 1, 1);
                   const monthFmt = (d: Date) =>
                     d.toLocaleDateString("de-DE", { month: "short", year: "numeric" });
@@ -3298,7 +3320,7 @@ export default function ModelDashboardTab() {
                   )}
                   {extraBillings.map((eb, idx) => {
                     const total = eb.data
-                      ? convertToBase(eb.data.fourbased ?? 0, "USD") + (eb.data.maloum ?? 0) + (eb.data.brezzels ?? 0)
+                      ? convertToBase(eb.data.fourbased ?? 0, "USD") + (eb.data.maloum ?? 0) + (eb.data.brezzels ?? 0) + (eb.data.admireme ?? 0)
                       : 0;
                     const monthLabel = new Date(eb.year, eb.month - 1, 1)
                       .toLocaleDateString("de-DE", { month: "short", year: "numeric" });
@@ -3395,11 +3417,12 @@ export default function ModelDashboardTab() {
                           </Button>
                         </div>
                         {eb.data && (
-                          <div className="grid grid-cols-3 gap-2 pt-1 border-t border-accent/10">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-accent/10">
                             {[
                               { label: "4Based", key: "fourbased" as const, color: "text-blue-400" },
                               { label: "Maloum", key: "maloum" as const, color: "text-purple-400" },
                               { label: "Brezzels", key: "brezzels" as const, color: "text-orange-400" },
+                              { label: "AdmireMe", key: "admireme" as const, color: "text-pink-400" },
                             ].map((p) => (
                               <div key={p.key} className="text-center">
                                 <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{p.label}</p>
@@ -3561,11 +3584,12 @@ export default function ModelDashboardTab() {
 
                 {/* Calculated share from payout_revenue (result of "Anteil berechnen") */}
                 {shareCalculated && billingShare > 0 && (() => {
-                  const src = payoutRevenueForMonth ?? { fourbased: 0, maloum: 0, brezzels: 0 };
+                  const src = payoutRevenueForMonth ?? { fourbased: 0, maloum: 0, brezzels: 0, admireme: 0 };
                   const grossTotal =
                     convertToBase(src.fourbased || 0, "USD") +
                     (src.maloum || 0) +
                     (src.brezzels || 0) +
+                    (src.admireme || 0) +
                     customPlatforms.reduce((s, cp) => s + (cp.revenue || 0), 0);
                   const cur = modelForm.currency || "EUR";
                   return (
@@ -3616,13 +3640,15 @@ export default function ModelDashboardTab() {
                         fourbased: fetchedPayoutRevenue.fourbased ?? 0,
                         maloum: fetchedPayoutRevenue.maloum ?? 0,
                         brezzels: fetchedPayoutRevenue.brezzels ?? 0,
+                        admireme: fetchedPayoutRevenue.admireme ?? 0,
                       }
                     : null;
-                  const totals = payoutRevenueForMonth ?? fetchedTotals ?? { fourbased: 0, maloum: 0, brezzels: 0 };
-                  const allRows: Array<{ key: "fourbased" | "maloum" | "brezzels"; label: string; platform: string; rev: number; pctField: keyof ModelRow }> = [
+                  const totals = payoutRevenueForMonth ?? fetchedTotals ?? { fourbased: 0, maloum: 0, brezzels: 0, admireme: 0 };
+                  const allRows: Array<{ key: "fourbased" | "maloum" | "brezzels" | "admireme"; label: string; platform: string; rev: number; pctField: keyof ModelRow }> = [
                     { key: "fourbased", label: "4Based", platform: "4Based", rev: totals.fourbased, pctField: "revenue_percentage_fourbased" },
                     { key: "maloum", label: "Maloum", platform: "Maloum", rev: totals.maloum, pctField: "revenue_percentage_maloum" },
                     { key: "brezzels", label: "Brezzels", platform: "Brezzels", rev: totals.brezzels, pctField: "revenue_percentage_brezzels" },
+                    { key: "admireme", label: "AdmireMe", platform: "Admireme", rev: totals.admireme, pctField: "revenue_percentage_admireme" },
                   ];
                   // Only show platforms the model actually has configured
                   const modelPlatformSet = new Set(modelAccounts.map((a) => a.platform));
@@ -3716,7 +3742,7 @@ export default function ModelDashboardTab() {
                                   if (newVal === r.rev) return;
                                   const { data: existing } = await (supabase as any)
                                     .from("payout_revenue")
-                                    .select("id, fourbased_revenue, maloum_revenue, brezzels_revenue")
+                                    .select("id, fourbased_revenue, maloum_revenue, brezzels_revenue, admireme_revenue")
                                     .eq("model_id", selectedModelId)
                                     .eq("last_fetched_month", fetchMonth)
                                     .eq("last_fetched_year", fetchYear)
@@ -3724,6 +3750,7 @@ export default function ModelDashboardTab() {
                                   const fb = r.key === "fourbased" ? newVal : Number(existing?.fourbased_revenue) || 0;
                                   const ml = r.key === "maloum" ? newVal : Number(existing?.maloum_revenue) || 0;
                                   const br = r.key === "brezzels" ? newVal : Number(existing?.brezzels_revenue) || 0;
+                                  const am = r.key === "admireme" ? newVal : Number(existing?.admireme_revenue) || 0;
                                   const payload: Record<string, any> = {
                                     model_id: selectedModelId,
                                     last_fetched_month: fetchMonth,
@@ -3731,7 +3758,8 @@ export default function ModelDashboardTab() {
                                     fourbased_revenue: fb,
                                     maloum_revenue: ml,
                                     brezzels_revenue: br,
-                                    monthly_revenue: fb + ml + br,
+                                    admireme_revenue: am,
+                                    monthly_revenue: fb + ml + br + am,
                                     last_fetched_at: new Date().toISOString(),
                                   };
                                   const { error } = existing
@@ -4424,7 +4452,7 @@ export default function ModelDashboardTab() {
                   const rows = await Promise.all(pairs.map(({ y, m }) =>
                     (supabase as any)
                       .from("payout_revenue")
-                      .select("fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue")
+                      .select("fourbased_revenue, maloum_revenue, brezzels_revenue, admireme_revenue, monthly_revenue")
                       .eq("model_id", selectedModelId)
                       .eq("last_fetched_month", m)
                       .eq("last_fetched_year", y)
@@ -4449,12 +4477,14 @@ export default function ModelDashboardTab() {
                         fourbased: Number(row?.fourbased_revenue || 0),
                         maloum: Number(row?.maloum_revenue || 0),
                         brezzels: Number(row?.brezzels_revenue || 0),
+                        admireme: Number(row?.admireme_revenue || 0),
                       },
                       percentages: {
                         default: fallbackPct,
                         fourbased: modelForm.revenue_percentage_fourbased || fallbackPct,
                         maloum: modelForm.revenue_percentage_maloum || fallbackPct,
                         brezzels: modelForm.revenue_percentage_brezzels || fallbackPct,
+                        admireme: modelForm.revenue_percentage_admireme || fallbackPct,
                       },
                       custom_platforms: customPlatforms,
                       monthly_revenue_at_billing: monthly,
@@ -4546,13 +4576,15 @@ export default function ModelDashboardTab() {
                     fourbased: acc.fourbased + (p.fourbased || 0),
                     maloum: acc.maloum + (p.maloum || 0),
                     brezzels: acc.brezzels + (p.brezzels || 0),
+                    admireme: acc.admireme + (p.admireme || 0),
                   }),
-                  { fourbased: 0, maloum: 0, brezzels: 0 },
+                  { fourbased: 0, maloum: 0, brezzels: 0, admireme: 0 },
                 )}
                 platformPercentages={{
                   fourbased: modelForm.revenue_percentage_fourbased || 0,
                   maloum: modelForm.revenue_percentage_maloum || 0,
                   brezzels: modelForm.revenue_percentage_brezzels || 0,
+                  admireme: modelForm.revenue_percentage_admireme || 0,
                 }}
                 platformFxRates={Array.from(
                   modelAccounts.reduce((map, a) => {
@@ -4569,6 +4601,7 @@ export default function ModelDashboardTab() {
                     "4Based": modelForm.revenue_percentage_fourbased || 0,
                     Maloum: modelForm.revenue_percentage_maloum || 0,
                     Brezzels: modelForm.revenue_percentage_brezzels || 0,
+                    Admireme: modelForm.revenue_percentage_admireme || 0,
                   };
                   // Prefer fetched/calculated payout revenue over live dashboard input,
                   // matching the "Custom % pro Plattform" card display.
@@ -4577,6 +4610,7 @@ export default function ModelDashboardTab() {
                         "4Based": fetchedPayoutRevenue.fourbased ?? 0,
                         Maloum: fetchedPayoutRevenue.maloum ?? 0,
                         Brezzels: fetchedPayoutRevenue.brezzels ?? 0,
+                        Admireme: fetchedPayoutRevenue.admireme ?? 0,
                       }
                     : null;
                   const payoutTotals = payoutRevenueForMonth
@@ -4584,6 +4618,7 @@ export default function ModelDashboardTab() {
                         "4Based": payoutRevenueForMonth.fourbased,
                         Maloum: payoutRevenueForMonth.maloum,
                         Brezzels: payoutRevenueForMonth.brezzels,
+                        Admireme: payoutRevenueForMonth.admireme,
                       }
                     : null;
                   const sourceTotals = payoutTotals ?? fetchedTotals;
@@ -5310,6 +5345,7 @@ export default function ModelDashboardTab() {
               fourbased: r.fourbased_revenue || 0,
               maloum: r.maloum_revenue || 0,
               brezzels: r.brezzels_revenue || 0,
+              admireme: r.admireme_revenue || 0,
             };
             const pcts = snap.percentages || {};
             const customs: Array<{ name: string; revenue: number; percentage: number }> = snap.custom_platforms || [];
@@ -5365,10 +5401,12 @@ export default function ModelDashboardTab() {
                         const pctFb = pcts.fourbased || defPct;
                         const pctMa = pcts.maloum || defPct;
                         const pctBr = pcts.brezzels || defPct;
+                        const pctAm = pcts.admireme || defPct;
                         const gesamt =
                           Number(platRev.fourbased || 0) +
                           Number(platRev.maloum || 0) +
                           Number(platRev.brezzels || 0) +
+                          Number(platRev.admireme || 0) +
                           customs.reduce((s, c) => s + Number(c.revenue || 0), 0);
                         return (
                           <>
@@ -5383,6 +5421,10 @@ export default function ModelDashboardTab() {
                             <div className="flex justify-between text-xs">
                               <span className="text-muted-foreground">Brezzels {pctBr ? `(${pctBr}%)` : ""}</span>
                               <span className="tabular-nums text-foreground">{fmt(platRev.brezzels)} EUR</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">AdmireMe {pctAm ? `(${pctAm}%)` : ""}</span>
+                              <span className="tabular-nums text-foreground">{fmt(platRev.admireme)} EUR</span>
                             </div>
                             {customs.map((c, i) => {
                               const cp = c.percentage || defPct;
