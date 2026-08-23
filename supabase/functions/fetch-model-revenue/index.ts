@@ -88,7 +88,8 @@ Deno.serve(async (req) => {
     const fourbased = result.fourbased_revenue == null ? null : Number(result.fourbased_revenue);
     const maloum = result.maloum_revenue == null ? null : Number(result.maloum_revenue);
     const brezzels = result.brezzels_revenue == null ? null : Number(result.brezzels_revenue);
-    const monthly = (fourbased || 0) + (maloum || 0) + (brezzels || 0);
+    const admireme = result.admireme_revenue == null ? null : Number(result.admireme_revenue);
+    const monthly = (fourbased || 0) + (maloum || 0) + (brezzels || 0) + (admireme || 0);
     const errors = Array.isArray(result.errors) ? result.errors : [];
 
     // Upsert into payout_revenue keyed by (model_id, month, year)
