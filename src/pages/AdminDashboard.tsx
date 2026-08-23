@@ -1221,7 +1221,7 @@ export default function AdminDashboard() {
   const [platformsOpen, setPlatformsOpen] = useState(false);
   const [setupDashboardsLoaded, setSetupDashboardsLoaded] = useState(false);
   const [setupSearch, setSetupSearch] = useState("");
-  const [setupPlatform, setSetupPlatform] = useState<"all" | "4Based" | "Maloum" | "Brezzels">("all");
+  const [setupPlatform, setSetupPlatform] = useState<string>("all");
   const [setupStatusFilter, setSetupStatusFilter] = useState<
     "alle" | "botdm_missing" | "setup_missing" | "welcome_missing" | "feedfolder_missing" | "feedbot_missing"
   >("alle");
@@ -8918,13 +8918,13 @@ export default function AdminDashboard() {
                           className="pl-8 text-xs h-8 border-transparent"
                         />
                       </div>
-                      <div className="flex gap-1 p-1 rounded-lg bg-secondary/30">
-                        {(["all", "4Based", "Maloum", "Brezzels"] as const).map((p) => (
+                      <div className="flex gap-1 p-1 rounded-lg bg-secondary/30 flex-wrap">
+                        {(["all", ...activePlatformLabels]).map((p) => (
                           <button
                             key={p}
                             onClick={() => setSetupPlatform(p)}
                             className={cn(
-                              "relative flex-1 text-[11px] font-medium py-1.5 rounded-md transition-colors duration-200 z-10",
+                              "relative flex-1 min-w-[70px] text-[11px] font-medium py-1.5 rounded-md transition-colors duration-200 z-10",
                               setupPlatform === p ? "text-accent" : "text-muted-foreground hover:text-foreground",
                             )}
                           >
@@ -9055,7 +9055,11 @@ export default function AdminDashboard() {
 
                       // Filter accounts
                       let filteredSetupAccounts = accounts.filter((acc) => {
-                        if (setupPlatform !== "all" && acc.platform !== setupPlatform) return false;
+                        if (
+                          setupPlatform !== "all" &&
+                          (acc.platform || "").toLowerCase() !== setupPlatform.toLowerCase()
+                        )
+                          return false;
                         if (setupSearch) {
                           const q = setupSearch.toLowerCase();
                           return (
