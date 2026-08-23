@@ -100,6 +100,7 @@ Deno.serve(async (req) => {
       fourbased_revenue: fourbased,
       maloum_revenue: maloum,
       brezzels_revenue: brezzels,
+      admireme_revenue: admireme,
       monthly_revenue: monthly,
       raw_response: result,
       last_fetched_at: new Date().toISOString(),
