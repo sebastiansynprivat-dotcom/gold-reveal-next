@@ -4534,11 +4534,12 @@ export default function ModelDashboardTab() {
                 bankBic={(modelForm as any).bank_bic || ""}
                 bankAccountHolder={(modelForm as any).bank_account_holder || ""}
                 platformRevenue={selectedModelPlatformRevenue.reduce(
-                  (acc, p) => ({
-                    fourbased: acc.fourbased + (p.fourbased || 0),
-                    maloum: acc.maloum + (p.maloum || 0),
-                    brezzels: acc.brezzels + (p.brezzels || 0),
-                  }),
+                  (acc, p) => {
+                    if (p.platform === "4Based") acc.fourbased += p.total;
+                    else if (p.platform === "Maloum") acc.maloum += p.total;
+                    else if (p.platform === "Brezzels") acc.brezzels += p.total;
+                    return acc;
+                  },
                   { fourbased: 0, maloum: 0, brezzels: 0 },
                 )}
                 platformPercentages={{
