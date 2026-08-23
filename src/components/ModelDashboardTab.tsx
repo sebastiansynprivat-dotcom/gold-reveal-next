@@ -1365,22 +1365,14 @@ export default function ModelDashboardTab() {
   // ─── Per-model platform revenue (for selected model) — converted to base currency ───
   const selectedModelPlatformRevenue = useMemo(() => {
     if (!selectedModelId || modelAccounts.length === 0) return [];
-    const platformMap: Record<string, { fourbased: number; maloum: number; brezzels: number; total: number }> = {};
+    const platformMap: Record<string, number> = {};
     for (const acc of modelAccounts) {
-      const pr = platformRevenues[acc.id];
       const rev = dashboardRevenues[acc.id] || 0;
       const accCur = getSourceCurrency(acc);
-      if (!platformMap[acc.platform]) platformMap[acc.platform] = { fourbased: 0, maloum: 0, brezzels: 0, total: 0 };
-      if (pr) {
-        // fourbased fetched values are always in USD
-        platformMap[acc.platform].fourbased += convertToBase(pr.fourbased, "USD");
-        platformMap[acc.platform].maloum += convertToBase(pr.maloum, acc.currency || baseCurrency);
-        platformMap[acc.platform].brezzels += convertToBase(pr.brezzels, acc.currency || baseCurrency);
-      }
-      platformMap[acc.platform].total += convertToBase(rev, accCur);
+      platformMap[acc.platform] = (platformMap[acc.platform] || 0) + convertToBase(rev, accCur);
     }
-    return Object.entries(platformMap).map(([platform, data]) => ({ platform, ...data }));
-  }, [selectedModelId, modelAccounts, platformRevenues, dashboardRevenues, convertToBase, baseCurrency, getSourceCurrency]);
+    return Object.entries(platformMap).map(([platform, total]) => ({ platform, total }));
+  }, [selectedModelId, modelAccounts, dashboardRevenues, convertToBase, getSourceCurrency]);
 
   const totalRevenue = useMemo(() => {
     return modelAccounts.reduce(
@@ -1409,12 +1401,21 @@ export default function ModelDashboardTab() {
       sum += (source.maloum || 0) * pctMl / 100;
       sum += (source.brezzels || 0) * pctBr / 100;
     }
+    // Extra built-in platforms (anything beyond the three payout_revenue columns)
+    const builtInExtra = selectedModelPlatformRevenue.filter((p) => !["4Based", "Maloum", "Brezzels"].includes(p.platform));
+    for (const p of builtInExtra) {
+      const override = customPlatforms.find((cp) => cp.name.trim().toLowerCase() === p.platform.toLowerCase());
+      const pct = override?.percentage ?? fallback;
+      sum += (p.total || 0) * pct / 100;
+    }
+    // Truly custom platforms (not matching any built-in platform)
     for (const cp of customPlatforms) {
+      if (selectedModelPlatformRevenue.some((p) => p.platform.toLowerCase() === cp.name.trim().toLowerCase())) continue;
       const pct = cp.percentage > 0 ? cp.percentage : fallback;
       sum += (cp.revenue || 0) * pct / 100;
     }
     return Math.round(sum * 100) / 100;
-  }, [payoutRevenueForMonth, fetchedPayoutRevenue, customPlatforms, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, convertToBase]);
+  }, [payoutRevenueForMonth, fetchedPayoutRevenue, customPlatforms, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, convertToBase, selectedModelPlatformRevenue]);
 
   // ─── Create model ───
   const handleCreateModel = async () => {
@@ -3619,14 +3620,26 @@ export default function ModelDashboardTab() {
                       }
                     : null;
                   const totals = payoutRevenueForMonth ?? fetchedTotals ?? { fourbased: 0, maloum: 0, brezzels: 0 };
-                  const allRows: Array<{ key: "fourbased" | "maloum" | "brezzels"; label: string; platform: string; rev: number; pctField: keyof ModelRow }> = [
-                    { key: "fourbased", label: "4Based", platform: "4Based", rev: totals.fourbased, pctField: "revenue_percentage_fourbased" },
-                    { key: "maloum", label: "Maloum", platform: "Maloum", rev: totals.maloum, pctField: "revenue_percentage_maloum" },
-                    { key: "brezzels", label: "Brezzels", platform: "Brezzels", rev: totals.brezzels, pctField: "revenue_percentage_brezzels" },
-                  ];
-                  // Only show platforms the model actually has configured
                   const modelPlatformSet = new Set(modelAccounts.map((a) => a.platform));
-                  const rows = allRows.filter((r) => modelPlatformSet.has(r.platform));
+                  const extraRevenueByPlatform = selectedModelPlatformRevenue.reduce<Record<string, number>>((acc, p) => {
+                    if (["4Based", "Maloum", "Brezzels"].includes(p.platform)) return acc;
+                    acc[p.platform] = (acc[p.platform] || 0) + p.total;
+                    return acc;
+                  }, {});
+                  const builtinRows: Array<{ kind: "builtin"; key: "fourbased" | "maloum" | "brezzels"; label: string; platform: string; rev: number; pctField: keyof ModelRow }> = [
+                    { kind: "builtin", key: "fourbased", label: "4Based", platform: "4Based", rev: totals.fourbased, pctField: "revenue_percentage_fourbased" },
+                    { kind: "builtin", key: "maloum", label: "Maloum", platform: "Maloum", rev: totals.maloum, pctField: "revenue_percentage_maloum" },
+                    { kind: "builtin", key: "brezzels", label: "Brezzels", platform: "Brezzels", rev: totals.brezzels, pctField: "revenue_percentage_brezzels" },
+                  ];
+                  const extraRows: Array<{ kind: "extra"; key: string; label: string; platform: string; rev: number }> =
+                    Object.entries(extraRevenueByPlatform).map(([platform, rev]) => ({
+                      kind: "extra",
+                      key: platform.toLowerCase(),
+                      label: platform,
+                      platform,
+                      rev,
+                    }));
+                  const rows = [...builtinRows.filter((r) => modelPlatformSet.has(r.platform)), ...extraRows];
                   return (
                     <div className="space-y-3 rounded-xl border border-accent/15 bg-accent/[0.02] p-3">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -3638,16 +3651,50 @@ export default function ModelDashboardTab() {
                         </p>
                       )}
                       {rows.map((r) => {
-                        const pct = (modelForm[r.pctField] as number) || 0;
-                        const usingFallback = pct === 0;
-                        const effective = usingFallback ? fallback : pct;
-                        const isFourbased = r.key === "fourbased";
+                        const isBuiltin = r.kind === "builtin";
+                        const isFourbased = isBuiltin && r.key === "fourbased";
                         const sourceCur = isFourbased ? "USD" : baseCurrency;
                         const revInBase = isFourbased ? convertToBase(r.rev, "USD") : r.rev;
+
+                        let pct = 0;
+                        let usingFallback = false;
+                        let effective = fallback;
+                        let extraEntry: CustomPlatform | undefined;
+                        if (isBuiltin) {
+                          pct = (modelForm[r.pctField] as number) || 0;
+                          usingFallback = pct === 0;
+                          effective = usingFallback ? fallback : pct;
+                        } else {
+                          extraEntry = customPlatforms.find((cp) => cp.name.trim().toLowerCase() === r.platform.toLowerCase());
+                          pct = extraEntry?.percentage ?? 0;
+                          usingFallback = pct === 0;
+                          effective = usingFallback ? fallback : pct;
+                        }
                         const earn = (revInBase * effective) / 100;
                         const showConversion = isFourbased && sourceCur !== baseCurrency;
                         const platErr = fetchErrors[r.platform];
                         const isAuthErr = !!platErr && /pass|auth|login|credential|401|403|invalid/i.test(`${platErr.code || ""} ${platErr.message || ""}`);
+
+                        const handleExtraPctChange = (v: number) => {
+                          setCustomPlatforms((prev) => {
+                            const existing = prev.find((cp) => cp.name.trim().toLowerCase() === r.platform.toLowerCase());
+                            if (existing) {
+                              return prev.map((cp) => (cp.id === existing.id ? { ...cp, percentage: v } : cp));
+                            }
+                            return [
+                              ...prev,
+                              {
+                                id: (typeof crypto !== "undefined" && (crypto as any).randomUUID)
+                                  ? (crypto as any).randomUUID()
+                                  : `cp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                                name: r.platform,
+                                revenue: 0,
+                                percentage: v,
+                              },
+                            ];
+                          });
+                        };
+
                         return (
                           <div key={r.key} className="space-y-1.5">
                             <div className="flex items-center justify-between gap-2">
@@ -3666,7 +3713,9 @@ export default function ModelDashboardTab() {
                                 <Slider
                                   value={[pct]}
                                   onValueChange={([v]) =>
-                                    setModelForm((prev) => ({ ...prev, [r.pctField]: v }))
+                                    isBuiltin
+                                      ? setModelForm((prev) => ({ ...prev, [r.pctField]: v }))
+                                      : handleExtraPctChange(v)
                                   }
                                   min={0}
                                   max={100}
@@ -3694,79 +3743,86 @@ export default function ModelDashboardTab() {
                                 → {earn.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {baseCurrency}
                               </span>
                             </div>
-                            {/* Manual override for fetched payout revenue */}
-                            <div className="flex items-center gap-2 pl-[4.5rem]">
-                              <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 shrink-0">
-                                Manuell überschreiben:
-                              </span>
-                              <Input
-                                type="number"
-                                min={0}
-                                step="0.01"
-                                inputMode="decimal"
-                                placeholder={`${r.rev.toFixed(2)} ${sourceCur}`}
-                                defaultValue=""
-                                key={`${r.key}-${fetchMonth}-${fetchYear}-${r.rev}`}
-                                className="bg-secondary/40 border-transparent text-[11px] h-7 tabular-nums max-w-[140px]"
-                                onBlur={async (e) => {
-                                  if (!selectedModelId) return;
-                                  const raw = (e.target as HTMLInputElement).value.replace(",", ".").trim();
-                                  if (raw === "") return;
-                                  const newVal = Math.round((Number(raw) || 0) * 100) / 100;
-                                  if (newVal === r.rev) return;
-                                  const { data: existing } = await (supabase as any)
-                                    .from("payout_revenue")
-                                    .select("id, fourbased_revenue, maloum_revenue, brezzels_revenue")
-                                    .eq("model_id", selectedModelId)
-                                    .eq("last_fetched_month", fetchMonth)
-                                    .eq("last_fetched_year", fetchYear)
-                                    .maybeSingle();
-                                  const fb = r.key === "fourbased" ? newVal : Number(existing?.fourbased_revenue) || 0;
-                                  const ml = r.key === "maloum" ? newVal : Number(existing?.maloum_revenue) || 0;
-                                  const br = r.key === "brezzels" ? newVal : Number(existing?.brezzels_revenue) || 0;
-                                  const payload: Record<string, any> = {
-                                    model_id: selectedModelId,
-                                    last_fetched_month: fetchMonth,
-                                    last_fetched_year: fetchYear,
-                                    fourbased_revenue: fb,
-                                    maloum_revenue: ml,
-                                    brezzels_revenue: br,
-                                    monthly_revenue: fb + ml + br,
-                                    last_fetched_at: new Date().toISOString(),
-                                  };
-                                  const { error } = existing
-                                    ? await (supabase as any).from("payout_revenue").update(payload).eq("id", existing.id)
-                                    : await (supabase as any).from("payout_revenue").insert(payload);
-                                  if (error) {
-                                    toast.error("Override fehlgeschlagen: " + error.message);
-                                    return;
-                                  }
-                                  toast.success(`${r.label}: Umsatz manuell überschrieben ✅`);
-                                  (e.target as HTMLInputElement).value = "";
-                                  setFetchRevenueTick((t) => t + 1);
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                                }}
-                              />
-                            </div>
-                            {platErr && !isAuthErr && (
-                              <div className="pl-[4.5rem] text-[10px] text-destructive/80">
-                                ⚠ {platErr.message}
-                              </div>
+                            {isBuiltin && (
+                              <>
+                                {/* Manual override for fetched payout revenue */}
+                                <div className="flex items-center gap-2 pl-[4.5rem]">
+                                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 shrink-0">
+                                    Manuell überschreiben:
+                                  </span>
+                                  <Input
+                                    type="number"
+                                    min={0}
+                                    step="0.01"
+                                    inputMode="decimal"
+                                    placeholder={`${r.rev.toFixed(2)} ${sourceCur}`}
+                                    defaultValue=""
+                                    key={`${r.key}-${fetchMonth}-${fetchYear}-${r.rev}`}
+                                    className="bg-secondary/40 border-transparent text-[11px] h-7 tabular-nums max-w-[140px]"
+                                    onBlur={async (e) => {
+                                      if (!selectedModelId) return;
+                                      const raw = (e.target as HTMLInputElement).value.replace(",", ".").trim();
+                                      if (raw === "") return;
+                                      const newVal = Math.round((Number(raw) || 0) * 100) / 100;
+                                      if (newVal === r.rev) return;
+                                      const { data: existing } = await (supabase as any)
+                                        .from("payout_revenue")
+                                        .select("id, fourbased_revenue, maloum_revenue, brezzels_revenue")
+                                        .eq("model_id", selectedModelId)
+                                        .eq("last_fetched_month", fetchMonth)
+                                        .eq("last_fetched_year", fetchYear)
+                                        .maybeSingle();
+                                      const fb = r.key === "fourbased" ? newVal : Number(existing?.fourbased_revenue) || 0;
+                                      const ml = r.key === "maloum" ? newVal : Number(existing?.maloum_revenue) || 0;
+                                      const br = r.key === "brezzels" ? newVal : Number(existing?.brezzels_revenue) || 0;
+                                      const payload: Record<string, any> = {
+                                        model_id: selectedModelId,
+                                        last_fetched_month: fetchMonth,
+                                        last_fetched_year: fetchYear,
+                                        fourbased_revenue: fb,
+                                        maloum_revenue: ml,
+                                        brezzels_revenue: br,
+                                        monthly_revenue: fb + ml + br,
+                                        last_fetched_at: new Date().toISOString(),
+                                      };
+                                      const { error } = existing
+                                        ? await (supabase as any).from("payout_revenue").update(payload).eq("id", existing.id)
+                                        : await (supabase as any).from("payout_revenue").insert(payload);
+                                      if (error) {
+                                        toast.error("Override fehlgeschlagen: " + error.message);
+                                        return;
+                                      }
+                                      toast.success(`${r.label}: Umsatz manuell überschrieben ✅`);
+                                      (e.target as HTMLInputElement).value = "";
+                                      setFetchRevenueTick((t) => t + 1);
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                                    }}
+                                  />
+                                </div>
+                                {platErr && !isAuthErr && (
+                                  <div className="pl-[4.5rem] text-[10px] text-destructive/80">
+                                    ⚠ {platErr.message}
+                                  </div>
+                                )}
+                              </>
                             )}
                           </div>
                         );
                       })}
 
 
-                      {/* Custom platforms */}
-                      {customPlatforms.length > 0 && (
+                      {/* Custom platforms (exclude built-in platforms that are shown above) */}
+                      {(() => {
+                        const genuineCustoms = customPlatforms.filter((cp) => !PLATFORMS.includes(cp.name.trim()));
+                        if (genuineCustoms.length === 0) return null;
+                        return (
                         <div className="pt-2 border-t border-accent/10 space-y-3">
                           <p className="text-[9px] uppercase tracking-wider text-muted-foreground/70">
                             Eigene Plattformen
                           </p>
-                          {customPlatforms.map((cp) => {
+                          {genuineCustoms.map((cp) => {
                             const effectivePct = cp.percentage > 0 ? cp.percentage : fallback;
                             const rev = Number(cp.revenue) || 0;
                             const earn = (rev * effectivePct) / 100;
@@ -3856,7 +3912,8 @@ export default function ModelDashboardTab() {
                             );
                           })}
                         </div>
-                      )}
+                      );
+                    })()}
 
                       <Button
                         type="button"
@@ -4542,11 +4599,12 @@ export default function ModelDashboardTab() {
                 bankBic={(modelForm as any).bank_bic || ""}
                 bankAccountHolder={(modelForm as any).bank_account_holder || ""}
                 platformRevenue={selectedModelPlatformRevenue.reduce(
-                  (acc, p) => ({
-                    fourbased: acc.fourbased + (p.fourbased || 0),
-                    maloum: acc.maloum + (p.maloum || 0),
-                    brezzels: acc.brezzels + (p.brezzels || 0),
-                  }),
+                  (acc, p) => {
+                    if (p.platform === "4Based") acc.fourbased += p.total;
+                    else if (p.platform === "Maloum") acc.maloum += p.total;
+                    else if (p.platform === "Brezzels") acc.brezzels += p.total;
+                    return acc;
+                  },
                   { fourbased: 0, maloum: 0, brezzels: 0 },
                 )}
                 platformPercentages={{
@@ -4598,9 +4656,17 @@ export default function ModelDashboardTab() {
                       if (r > 0) agg[name] = { rev: r, pct };
                     }
                   }
+                  // Extra built-in platforms represented by the model's accounts
+                  for (const p of selectedModelPlatformRevenue) {
+                    if (["4Based", "Maloum", "Brezzels"].includes(p.platform)) continue;
+                    const override = customPlatforms.find((cp) => cp.name.trim().toLowerCase() === p.platform.toLowerCase());
+                    const pct = override?.percentage ?? fallback;
+                    if (p.total > 0) agg[p.platform] = { rev: p.total, pct };
+                  }
                   const builtins = Object.entries(agg).map(([name, v]) => ({ name, rev: v.rev, pct: v.pct }));
+                  // Truly custom platforms only (built-ins are handled above)
                   const customs = customPlatforms
-                    .filter((cp) => cp.name.trim() && cp.revenue > 0)
+                    .filter((cp) => cp.name.trim() && cp.revenue > 0 && !PLATFORMS.includes(cp.name.trim()))
                     .map((cp) => ({
                       name: cp.name.trim(),
                       rev: cp.revenue,
