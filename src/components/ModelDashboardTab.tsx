@@ -3813,13 +3813,16 @@ export default function ModelDashboardTab() {
                       })}
 
 
-                      {/* Custom platforms */}
-                      {customPlatforms.length > 0 && (
+                      {/* Custom platforms (exclude built-in platforms that are shown above) */}
+                      {(() => {
+                        const genuineCustoms = customPlatforms.filter((cp) => !PLATFORMS.includes(cp.name.trim()));
+                        if (genuineCustoms.length === 0) return null;
+                        return (
                         <div className="pt-2 border-t border-accent/10 space-y-3">
                           <p className="text-[9px] uppercase tracking-wider text-muted-foreground/70">
                             Eigene Plattformen
                           </p>
-                          {customPlatforms.map((cp) => {
+                          {genuineCustoms.map((cp) => {
                             const effectivePct = cp.percentage > 0 ? cp.percentage : fallback;
                             const rev = Number(cp.revenue) || 0;
                             const earn = (rev * effectivePct) / 100;
