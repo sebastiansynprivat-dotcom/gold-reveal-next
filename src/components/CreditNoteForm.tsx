@@ -28,6 +28,7 @@ interface PlatformRevenue {
   fourbased: number;
   maloum: number;
   brezzels: number;
+  admireme?: number;
   custom?: { name: string; rev: number };
 }
 
@@ -75,7 +76,7 @@ interface CreditNoteFormProps {
   revenuePercentage?: number;
   currency?: string;
   platformRevenue?: PlatformRevenue;
-  platformPercentages?: { fourbased: number; maloum: number; brezzels: number };
+  platformPercentages?: { fourbased: number; maloum: number; brezzels: number; admireme?: number };
   compensationType?: "percentage" | "hourly";
   hourlyRate?: number;
   hoursWorked?: number;
@@ -619,16 +620,16 @@ export default function CreditNoteForm({
       y += 7;
     } else {
       // Table row(s) – one per platform if breakdown exists, otherwise single row
-      const pctFor = (key: "fourbased" | "maloum" | "brezzels") => {
+      const pctFor = (key: "fourbased" | "maloum" | "brezzels" | "admireme") => {
         const custom = platformPercentages?.[key] || 0;
         return custom > 0 ? custom : revenuePercentage;
       };
       const hasAnyPct = revenuePercentage > 0
-        || (platformPercentages && (platformPercentages.fourbased > 0 || platformPercentages.maloum > 0 || platformPercentages.brezzels > 0));
+        || (platformPercentages && (platformPercentages.fourbased > 0 || platformPercentages.maloum > 0 || platformPercentages.brezzels > 0 || (platformPercentages.admireme || 0) > 0));
       const customEntry = platformRevenue?.custom;
       const hasCustom = !!(customEntry && customEntry.rev > 0 && customEntry.name && revenuePercentage > 0);
       const useExplicitBreakdown = platformBreakdown && platformBreakdown.length > 0;
-      const hasPlatformBreakdown = useExplicitBreakdown || (platformRevenue && hasAnyPct && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0 || hasCustom));
+      const hasPlatformBreakdown = useExplicitBreakdown || (platformRevenue && hasAnyPct && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0 || (platformRevenue.admireme || 0) > 0 || hasCustom));
       const platforms = useExplicitBreakdown
         ? platformBreakdown!.filter(p => p.rev > 0 && p.pct > 0)
         : hasPlatformBreakdown
@@ -636,6 +637,7 @@ export default function CreditNoteForm({
             { name: "4Based", rev: platformRevenue!.fourbased, pct: pctFor("fourbased") },
             { name: "Maloum", rev: platformRevenue!.maloum, pct: pctFor("maloum") },
             { name: "Brezzels", rev: platformRevenue!.brezzels, pct: pctFor("brezzels") },
+            { name: "AdmireMe", rev: platformRevenue!.admireme || 0, pct: pctFor("admireme") },
             ...(hasCustom ? [{ name: customEntry!.name, rev: customEntry!.rev, pct: revenuePercentage }] : []),
           ].filter(p => p.rev > 0 && p.pct > 0)
         : [];
