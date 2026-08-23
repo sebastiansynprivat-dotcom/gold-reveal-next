@@ -3620,14 +3620,26 @@ export default function ModelDashboardTab() {
                       }
                     : null;
                   const totals = payoutRevenueForMonth ?? fetchedTotals ?? { fourbased: 0, maloum: 0, brezzels: 0 };
-                  const allRows: Array<{ key: "fourbased" | "maloum" | "brezzels"; label: string; platform: string; rev: number; pctField: keyof ModelRow }> = [
-                    { key: "fourbased", label: "4Based", platform: "4Based", rev: totals.fourbased, pctField: "revenue_percentage_fourbased" },
-                    { key: "maloum", label: "Maloum", platform: "Maloum", rev: totals.maloum, pctField: "revenue_percentage_maloum" },
-                    { key: "brezzels", label: "Brezzels", platform: "Brezzels", rev: totals.brezzels, pctField: "revenue_percentage_brezzels" },
-                  ];
-                  // Only show platforms the model actually has configured
                   const modelPlatformSet = new Set(modelAccounts.map((a) => a.platform));
-                  const rows = allRows.filter((r) => modelPlatformSet.has(r.platform));
+                  const extraRevenueByPlatform = selectedModelPlatformRevenue.reduce<Record<string, number>>((acc, p) => {
+                    if (["4Based", "Maloum", "Brezzels"].includes(p.platform)) return acc;
+                    acc[p.platform] = (acc[p.platform] || 0) + p.total;
+                    return acc;
+                  }, {});
+                  const builtinRows: Array<{ kind: "builtin"; key: "fourbased" | "maloum" | "brezzels"; label: string; platform: string; rev: number; pctField: keyof ModelRow }> = [
+                    { kind: "builtin", key: "fourbased", label: "4Based", platform: "4Based", rev: totals.fourbased, pctField: "revenue_percentage_fourbased" },
+                    { kind: "builtin", key: "maloum", label: "Maloum", platform: "Maloum", rev: totals.maloum, pctField: "revenue_percentage_maloum" },
+                    { kind: "builtin", key: "brezzels", label: "Brezzels", platform: "Brezzels", rev: totals.brezzels, pctField: "revenue_percentage_brezzels" },
+                  ];
+                  const extraRows: Array<{ kind: "extra"; key: string; label: string; platform: string; rev: number }> =
+                    Object.entries(extraRevenueByPlatform).map(([platform, rev]) => ({
+                      kind: "extra",
+                      key: platform.toLowerCase(),
+                      label: platform,
+                      platform,
+                      rev,
+                    }));
+                  const rows = [...builtinRows.filter((r) => modelPlatformSet.has(r.platform)), ...extraRows];
                   return (
                     <div className="space-y-3 rounded-xl border border-accent/15 bg-accent/[0.02] p-3">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
