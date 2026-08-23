@@ -1365,22 +1365,14 @@ export default function ModelDashboardTab() {
   // ─── Per-model platform revenue (for selected model) — converted to base currency ───
   const selectedModelPlatformRevenue = useMemo(() => {
     if (!selectedModelId || modelAccounts.length === 0) return [];
-    const platformMap: Record<string, { fourbased: number; maloum: number; brezzels: number; total: number }> = {};
+    const platformMap: Record<string, number> = {};
     for (const acc of modelAccounts) {
-      const pr = platformRevenues[acc.id];
       const rev = dashboardRevenues[acc.id] || 0;
       const accCur = getSourceCurrency(acc);
-      if (!platformMap[acc.platform]) platformMap[acc.platform] = { fourbased: 0, maloum: 0, brezzels: 0, total: 0 };
-      if (pr) {
-        // fourbased fetched values are always in USD
-        platformMap[acc.platform].fourbased += convertToBase(pr.fourbased, "USD");
-        platformMap[acc.platform].maloum += convertToBase(pr.maloum, acc.currency || baseCurrency);
-        platformMap[acc.platform].brezzels += convertToBase(pr.brezzels, acc.currency || baseCurrency);
-      }
-      platformMap[acc.platform].total += convertToBase(rev, accCur);
+      platformMap[acc.platform] = (platformMap[acc.platform] || 0) + convertToBase(rev, accCur);
     }
-    return Object.entries(platformMap).map(([platform, data]) => ({ platform, ...data }));
-  }, [selectedModelId, modelAccounts, platformRevenues, dashboardRevenues, convertToBase, baseCurrency, getSourceCurrency]);
+    return Object.entries(platformMap).map(([platform, total]) => ({ platform, total }));
+  }, [selectedModelId, modelAccounts, dashboardRevenues, convertToBase, getSourceCurrency]);
 
   const totalRevenue = useMemo(() => {
     return modelAccounts.reduce(
