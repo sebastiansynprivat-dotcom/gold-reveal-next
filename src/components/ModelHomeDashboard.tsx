@@ -227,7 +227,7 @@ export default function ModelHomeDashboard({
   const [detailInvoice, setDetailInvoice] = useState<any | null>(null);
   const [issuer, setIssuer] = useState<{ name: string; address: string; vat_id: string } | null>(null);
   const [inProgressMonths, setInProgressMonths] = useState<Array<{ month: number; year: number }>>([]);
-  const [platformPcts, setPlatformPcts] = useState<{ fourbased: number; maloum: number; brezzels: number; fallback: number }>({ fourbased: 0, maloum: 0, brezzels: 0, fallback: 0 });
+  const [platformPcts, setPlatformPcts] = useState<{ fourbased: number; maloum: number; brezzels: number; admireme: number; fallback: number }>({ fourbased: 0, maloum: 0, brezzels: 0, admireme: 0, fallback: 0 });
   const [estimatedPayouts, setEstimatedPayouts] = useState<Record<string, number>>({});
 
   const [loading, setLoading] = useState(true);
@@ -270,7 +270,7 @@ export default function ModelHomeDashboard({
           .eq("model_id", modelId)
           .maybeSingle(),
         (supabase.from("models") as any)
-          .select("currency, model_agency, revenue_percentage, revenue_percentage_fourbased, revenue_percentage_maloum, revenue_percentage_brezzels")
+          .select("currency, model_agency, revenue_percentage, revenue_percentage_fourbased, revenue_percentage_maloum, revenue_percentage_brezzels, revenue_percentage_admireme")
           .eq("id", modelId)
           .maybeSingle(),
       ]);
@@ -287,6 +287,7 @@ export default function ModelHomeDashboard({
         fourbased: Number(m.revenue_percentage_fourbased || fallback || 0),
         maloum: Number(m.revenue_percentage_maloum || fallback || 0),
         brezzels: Number(m.revenue_percentage_brezzels || fallback || 0),
+        admireme: Number(m.revenue_percentage_admireme || fallback || 0),
         fallback,
       });
     })();
@@ -428,7 +429,7 @@ export default function ModelHomeDashboard({
       const numbers = list.map((x: any) => x.credit_note_number).filter(Boolean);
       if (numbers.length > 0) {
         const { data: pr } = await (supabase.from("payout_revenue") as any)
-          .select("last_fetched_month, last_fetched_year, fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue, billed_at, billed_amount, billed_credit_note_number, billed_snapshot")
+          .select("last_fetched_month, last_fetched_year, fourbased_revenue, maloum_revenue, brezzels_revenue, admireme_revenue, monthly_revenue, billed_at, billed_amount, billed_credit_note_number, billed_snapshot")
           .eq("model_id", modelId)
           .in("billed_credit_note_number", numbers);
         const map: Record<string, any[]> = {};
@@ -548,7 +549,7 @@ export default function ModelHomeDashboard({
       const results = await Promise.all(
         pairs.map(({ y, m }) =>
           (supabase.from("payout_revenue") as any)
-            .select("last_fetched_year, last_fetched_month, fourbased_revenue, maloum_revenue, brezzels_revenue")
+            .select("last_fetched_year, last_fetched_month, fourbased_revenue, maloum_revenue, brezzels_revenue, admireme_revenue")
             .eq("model_id", modelId)
             .eq("last_fetched_year", y)
             .eq("last_fetched_month", m)
@@ -563,6 +564,7 @@ export default function ModelHomeDashboard({
       const pctFourbased = (platformPcts.fourbased || platformPcts.fallback || 0) / 100;
       const pctMaloum = (platformPcts.maloum || platformPcts.fallback || 0) / 100;
       const pctBrezzels = (platformPcts.brezzels || platformPcts.fallback || 0) / 100;
+      const pctAdmireme = (platformPcts.admireme || platformPcts.fallback || 0) / 100;
 
       const out: Record<string, number> = {};
       const now = new Date();
@@ -574,7 +576,8 @@ export default function ModelHomeDashboard({
         const maloum = Number(cur.maloum_revenue || 0) * pctMaloum;
         const brezzels = Number(cur.brezzels_revenue || 0) * pctBrezzels;
         const fourbased = Number(prev.fourbased_revenue || 0) * pctFourbased;
-        let est = maloum + brezzels + fourbased;
+        const admireme = Number(cur.admireme_revenue || 0) * pctAdmireme;
+        let est = maloum + brezzels + fourbased + admireme;
         // Fallback: if payout_revenue has no data yet for the current
         // in-progress month, derive an estimate from the live accounts_data
         // revenue × the model's commission percentage. Uses the same smart
@@ -1347,12 +1350,14 @@ export default function ModelHomeDashboard({
                             fourbased: s.fourbased_revenue || 0,
                             maloum: s.maloum_revenue || 0,
                             brezzels: s.brezzels_revenue || 0,
+                            admireme: s.admireme_revenue || 0,
                           };
                           const pcts = snap.percentages || {};
                           const defPct = pcts.default || 0;
                           const pctFb = pcts.fourbased || defPct;
                           const pctMa = pcts.maloum || defPct;
                           const pctBr = pcts.brezzels || defPct;
+                          const pctAm = pcts.admireme || defPct;
                           const snapCurrency = forceCurrency || snap.invoice_currency || modelCurrency;
                           const customs: any[] = snap.custom_platforms || [];
                           const fmtN = (n: number) =>
@@ -1361,6 +1366,7 @@ export default function ModelHomeDashboard({
                             Number(pr.fourbased || 0) +
                             Number(pr.maloum || 0) +
                             Number(pr.brezzels || 0) +
+                            Number(pr.admireme || 0) +
                             customs.reduce((sum, c) => sum + Number(c.revenue || 0), 0);
                           return (
                             <div key={i} className="rounded-md bg-background/40 border border-border/30 p-2.5 space-y-2">
@@ -1387,6 +1393,12 @@ export default function ModelHomeDashboard({
                                   <div className="flex justify-between text-muted-foreground">
                                     <span>Brezzels {pctBr ? `(${pctBr}%)` : ""}</span>
                                     <span className="tabular-nums">{fmtN(pr.brezzels)} EUR</span>
+                                  </div>
+                                )}
+                                {Number(pr.admireme || 0) > 0 && (
+                                  <div className="flex justify-between text-muted-foreground">
+                                    <span>AdmireMe {pctAm ? `(${pctAm}%)` : ""}</span>
+                                    <span className="tabular-nums">{fmtN(pr.admireme)} EUR</span>
                                   </div>
                                 )}
                                 {customs.map((c, ci) => {
