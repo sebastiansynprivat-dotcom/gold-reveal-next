@@ -896,7 +896,7 @@ export default function ModelDashboardTab() {
       for (const id of accountIds) sums[id] = 0;
       // Aggregate platform totals (active accounts get per-id totals; archived
       // contributions are merged by platform so they still appear in the breakdown).
-      let archivedFourbased = 0, archivedMaloum = 0, archivedBrezzels = 0;
+      let archivedFourbased = 0, archivedMaloum = 0, archivedBrezzels = 0, archivedAdmireme = 0;
       for (const r of (data || []) as Array<{ account_id: string | null; model_id: string | null; platform: string | null; total: number | string }>) {
         const amt = Number(r.total || 0);
         if (r.account_id && sums[r.account_id] !== undefined) {
@@ -4610,6 +4610,7 @@ export default function ModelDashboardTab() {
                         "4Based": fetchedPayoutRevenue.fourbased ?? 0,
                         Maloum: fetchedPayoutRevenue.maloum ?? 0,
                         Brezzels: fetchedPayoutRevenue.brezzels ?? 0,
+                        Admireme: fetchedPayoutRevenue.admireme ?? 0,
                       }
                     : null;
                   const payoutTotals = payoutRevenueForMonth
@@ -4617,6 +4618,7 @@ export default function ModelDashboardTab() {
                         "4Based": payoutRevenueForMonth.fourbased,
                         Maloum: payoutRevenueForMonth.maloum,
                         Brezzels: payoutRevenueForMonth.brezzels,
+                        Admireme: payoutRevenueForMonth.admireme,
                       }
                     : null;
                   const sourceTotals = payoutTotals ?? fetchedTotals;
@@ -5419,6 +5421,10 @@ export default function ModelDashboardTab() {
                             <div className="flex justify-between text-xs">
                               <span className="text-muted-foreground">Brezzels {pctBr ? `(${pctBr}%)` : ""}</span>
                               <span className="tabular-nums text-foreground">{fmt(platRev.brezzels)} EUR</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">AdmireMe {pctAm ? `(${pctAm}%)` : ""}</span>
+                              <span className="tabular-nums text-foreground">{fmt(platRev.admireme)} EUR</span>
                             </div>
                             {customs.map((c, i) => {
                               const cp = c.percentage || defPct;
