@@ -1401,12 +1401,21 @@ export default function ModelDashboardTab() {
       sum += (source.maloum || 0) * pctMl / 100;
       sum += (source.brezzels || 0) * pctBr / 100;
     }
+    // Extra built-in platforms (anything beyond the three payout_revenue columns)
+    const builtInExtra = selectedModelPlatformRevenue.filter((p) => !["4Based", "Maloum", "Brezzels"].includes(p.platform));
+    for (const p of builtInExtra) {
+      const override = customPlatforms.find((cp) => cp.name.trim().toLowerCase() === p.platform.toLowerCase());
+      const pct = override?.percentage ?? fallback;
+      sum += (p.total || 0) * pct / 100;
+    }
+    // Truly custom platforms (not matching any built-in platform)
     for (const cp of customPlatforms) {
+      if (selectedModelPlatformRevenue.some((p) => p.platform.toLowerCase() === cp.name.trim().toLowerCase())) continue;
       const pct = cp.percentage > 0 ? cp.percentage : fallback;
       sum += (cp.revenue || 0) * pct / 100;
     }
     return Math.round(sum * 100) / 100;
-  }, [payoutRevenueForMonth, fetchedPayoutRevenue, customPlatforms, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, convertToBase]);
+  }, [payoutRevenueForMonth, fetchedPayoutRevenue, customPlatforms, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, convertToBase, selectedModelPlatformRevenue]);
 
   // ─── Create model ───
   const handleCreateModel = async () => {
