@@ -3912,7 +3912,8 @@ export default function ModelDashboardTab() {
                             );
                           })}
                         </div>
-                      )}
+                      );
+                    })()}
 
                       <Button
                         type="button"
