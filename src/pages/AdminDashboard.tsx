@@ -8918,8 +8918,8 @@ export default function AdminDashboard() {
                           className="pl-8 text-xs h-8 border-transparent"
                         />
                       </div>
-                      <div className="flex gap-1 p-1 rounded-lg bg-secondary/30">
-                        {(["all", "4Based", "Maloum", "Brezzels"] as const).map((p) => (
+                      <div className="flex gap-1 p-1 rounded-lg bg-secondary/30 flex-wrap">
+                        {(["all", ...activePlatformLabels]).map((p) => (
                           <button
                             key={p}
                             onClick={() => setSetupPlatform(p)}
