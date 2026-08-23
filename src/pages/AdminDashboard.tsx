@@ -1221,7 +1221,7 @@ export default function AdminDashboard() {
   const [platformsOpen, setPlatformsOpen] = useState(false);
   const [setupDashboardsLoaded, setSetupDashboardsLoaded] = useState(false);
   const [setupSearch, setSetupSearch] = useState("");
-  const [setupPlatform, setSetupPlatform] = useState<"all" | "4Based" | "Maloum" | "Brezzels">("all");
+  const [setupPlatform, setSetupPlatform] = useState<string>("all");
   const [setupStatusFilter, setSetupStatusFilter] = useState<
     "alle" | "botdm_missing" | "setup_missing" | "welcome_missing" | "feedfolder_missing" | "feedbot_missing"
   >("alle");
