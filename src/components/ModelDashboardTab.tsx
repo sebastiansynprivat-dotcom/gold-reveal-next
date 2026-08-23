@@ -4656,9 +4656,17 @@ export default function ModelDashboardTab() {
                       if (r > 0) agg[name] = { rev: r, pct };
                     }
                   }
+                  // Extra built-in platforms represented by the model's accounts
+                  for (const p of selectedModelPlatformRevenue) {
+                    if (["4Based", "Maloum", "Brezzels"].includes(p.platform)) continue;
+                    const override = customPlatforms.find((cp) => cp.name.trim().toLowerCase() === p.platform.toLowerCase());
+                    const pct = override?.percentage ?? fallback;
+                    if (p.total > 0) agg[p.platform] = { rev: p.total, pct };
+                  }
                   const builtins = Object.entries(agg).map(([name, v]) => ({ name, rev: v.rev, pct: v.pct }));
+                  // Truly custom platforms only (built-ins are handled above)
                   const customs = customPlatforms
-                    .filter((cp) => cp.name.trim() && cp.revenue > 0)
+                    .filter((cp) => cp.name.trim() && cp.revenue > 0 && !PLATFORMS.includes(cp.name.trim()))
                     .map((cp) => ({
                       name: cp.name.trim(),
                       rev: cp.revenue,
