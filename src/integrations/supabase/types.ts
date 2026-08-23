@@ -2536,6 +2536,7 @@ export type Database = {
           referral_source: string
           referrer_tag: string
           revenue_percentage: number
+          revenue_percentage_admireme: number
           revenue_percentage_brezzels: number
           revenue_percentage_fourbased: number
           revenue_percentage_maloum: number
@@ -2588,6 +2589,7 @@ export type Database = {
           referral_source?: string
           referrer_tag?: string
           revenue_percentage?: number
+          revenue_percentage_admireme?: number
           revenue_percentage_brezzels?: number
           revenue_percentage_fourbased?: number
           revenue_percentage_maloum?: number
@@ -2640,6 +2642,7 @@ export type Database = {
           referral_source?: string
           referrer_tag?: string
           revenue_percentage?: number
+          revenue_percentage_admireme?: number
           revenue_percentage_brezzels?: number
           revenue_percentage_fourbased?: number
           revenue_percentage_maloum?: number
