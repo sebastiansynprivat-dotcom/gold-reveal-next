@@ -8924,7 +8924,7 @@ export default function AdminDashboard() {
                             key={p}
                             onClick={() => setSetupPlatform(p)}
                             className={cn(
-                              "relative flex-1 text-[11px] font-medium py-1.5 rounded-md transition-colors duration-200 z-10",
+                              "relative flex-1 min-w-[70px] text-[11px] font-medium py-1.5 rounded-md transition-colors duration-200 z-10",
                               setupPlatform === p ? "text-accent" : "text-muted-foreground hover:text-foreground",
                             )}
                           >
