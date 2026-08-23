@@ -9055,7 +9055,11 @@ export default function AdminDashboard() {
 
                       // Filter accounts
                       let filteredSetupAccounts = accounts.filter((acc) => {
-                        if (setupPlatform !== "all" && acc.platform !== setupPlatform) return false;
+                        if (
+                          setupPlatform !== "all" &&
+                          (acc.platform || "").toLowerCase() !== setupPlatform.toLowerCase()
+                        )
+                          return false;
                         if (setupSearch) {
                           const q = setupSearch.toLowerCase();
                           return (
