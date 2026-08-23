@@ -125,7 +125,7 @@ export default function ModelGroupsPanel({
   const [billingLoading, setBillingLoading] = useState(false);
   const [fetchAllProgress, setFetchAllProgress] = useState<{ done: number; total: number; nextInSec: number } | null>(null);
   const cancelFetchAllRef = useRef(false);
-  const [revenueByModel, setRevenueByModel] = useState<Record<string, { fb: number | null; ml: number | null; br: number | null; fetched_at: string | null; errors: Array<{ platform?: string; message?: string; code?: string }> }>>({});
+  const [revenueByModel, setRevenueByModel] = useState<Record<string, { fb: number | null; ml: number | null; br: number | null; am: number | null; fetched_at: string | null; errors: Array<{ platform?: string; message?: string; code?: string }> }>>({});
   const [retryingModels, setRetryingModels] = useState<Record<string, { until: number; platforms: string[] }>>({});
   const [retryTick, setRetryTick] = useState(0);
   const [groupSearch, setGroupSearch] = useState("");
@@ -149,7 +149,7 @@ export default function ModelGroupsPanel({
     if (ids.length === 0) { setRevenueByModel({}); return; }
     const { data } = await (supabase as any)
       .from("payout_revenue")
-      .select("model_id, fourbased_revenue, maloum_revenue, brezzels_revenue, last_fetched_at, raw_response")
+      .select("model_id, fourbased_revenue, maloum_revenue, brezzels_revenue, admireme_revenue, last_fetched_at, raw_response")
       .in("model_id", ids)
       .eq("last_fetched_month", month)
       .eq("last_fetched_year", year);
@@ -161,6 +161,7 @@ export default function ModelGroupsPanel({
         fb: r.fourbased_revenue == null ? null : Number(r.fourbased_revenue),
         ml: r.maloum_revenue == null ? null : Number(r.maloum_revenue),
         br: r.brezzels_revenue == null ? null : Number(r.brezzels_revenue),
+        am: r.admireme_revenue == null ? null : Number(r.admireme_revenue),
         fetched_at: r.last_fetched_at,
         errors: errs,
       };
@@ -238,7 +239,7 @@ export default function ModelGroupsPanel({
     const rev = revenueByModel[modelId];
     if (!rev) return true;
     if ((rev.errors || []).length > 0) return true;
-    return rev.fb == null && rev.ml == null && rev.br == null;
+    return rev.fb == null && rev.ml == null && rev.br == null && rev.am == null;
   };
 
 
@@ -573,7 +574,7 @@ export default function ModelGroupsPanel({
           m.commission_override != null && Number(m.commission_override) !== 0
             ? Number(m.commission_override)
             : Number(selected.default_commission);
-        const pctFor = (key: "fourbased" | "maloum" | "brezzels") => {
+        const pctFor = (key: "fourbased" | "maloum" | "brezzels" | "admireme") => {
           const v =
             key === "fourbased"
               ? m.commission_override_fourbased
@@ -597,7 +598,7 @@ export default function ModelGroupsPanel({
           // 1) Prefer fetched revenue for the selected period (payout_revenue)
           const { data: pr } = await (supabase as any)
             .from("payout_revenue")
-            .select("fourbased_revenue, maloum_revenue, brezzels_revenue")
+            .select("fourbased_revenue, maloum_revenue, brezzels_revenue, admireme_revenue")
             .eq("model_id", m.id)
             .eq("last_fetched_month", periodMonth)
             .eq("last_fetched_year", periodYear)
@@ -608,7 +609,7 @@ export default function ModelGroupsPanel({
           if (!src) {
             const { data: md } = await (supabase as any)
               .from("model_dashboard")
-              .select("fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue")
+              .select("fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue, admireme_revenue")
               .eq("model_id", m.id)
               .maybeSingle();
             src = md;
@@ -619,6 +620,7 @@ export default function ModelGroupsPanel({
             const fb = +(fbUsd * usdToEur).toFixed(2); // USD → EUR
             const ml = Number(src.maloum_revenue) || 0;
             const br = Number(src.brezzels_revenue) || 0;
+            const am = Number(src.admireme_revenue) || 0;
             if (fb > 0)
               pushLine(
                 `4Based ($${fbUsd.toFixed(2)} @ ${usdToEur.toFixed(4)})`,
@@ -627,6 +629,7 @@ export default function ModelGroupsPanel({
               );
             if (ml > 0) pushLine("Maloum", ml, pctFor("maloum"));
             if (br > 0) pushLine("Brezzels", br, pctFor("brezzels"));
+            if (am > 0) pushLine("AdmireMe", am, pctFor("admireme"));
           }
         }
 
@@ -1232,7 +1235,7 @@ export default function ModelGroupsPanel({
                           }
                           const fmt = (v: number | null, suffix = "€") =>
                             v == null ? "—" : money(v, suffix === "$" ? "USD" : "EUR");
-                          const total = (rev.fb ?? 0) + (rev.ml ?? 0) + (rev.br ?? 0);
+                          const total = (rev.fb ?? 0) + (rev.ml ?? 0) + (rev.br ?? 0) + (rev.am ?? 0);
                           return (
                             <div className="space-y-1.5">
                               <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-md bg-accent/5 border border-accent/15">
@@ -1250,6 +1253,11 @@ export default function ModelGroupsPanel({
                                 {rev.br != null && (
                                   <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
                                     Brezzels {fmt(rev.br)}
+                                  </Badge>
+                                )}
+                                {rev.am != null && (
+                                  <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
+                                    AdmireMe {fmt(rev.am)}
                                   </Badge>
                                 )}
                                 <span className="ml-auto text-[10px] text-accent font-semibold">
