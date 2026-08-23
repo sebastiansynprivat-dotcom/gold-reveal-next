@@ -2733,6 +2733,7 @@ export type Database = {
       }
       payout_revenue: {
         Row: {
+          admireme_revenue: number | null
           billed_amount: number | null
           billed_at: string | null
           billed_credit_note_number: string | null
@@ -2752,6 +2753,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          admireme_revenue?: number | null
           billed_amount?: number | null
           billed_at?: string | null
           billed_credit_note_number?: string | null
@@ -2771,6 +2773,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          admireme_revenue?: number | null
           billed_amount?: number | null
           billed_at?: string | null
           billed_credit_note_number?: string | null
