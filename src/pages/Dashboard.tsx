@@ -2487,6 +2487,7 @@ function BonusModelSection({
           )}
         </motion.div>
 
+        {!hideStreaks && (<>
         {/* Spacer before streaks */}
         <div className="h-6 lg:h-8" />
 
