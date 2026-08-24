@@ -2240,6 +2240,8 @@ function BonusModelSection({
   isTopTier: boolean;
   umsatz: number;
 }) {
+  const { user: bonusUser } = useAuth();
+  const hideStreaks = isGamificationExcluded(bonusUser?.id);
   const [demoMode, setDemoMode] = useState(false);
   const [demoTierIndex, setDemoTierIndex] = useState(0);
 
