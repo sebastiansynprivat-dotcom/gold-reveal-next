@@ -82,6 +82,7 @@ import StreakTracker from "@/components/StreakTracker";
 import MonthlyStreakTracker from "@/components/MonthlyStreakTracker";
 import NotificationBanner from "@/components/NotificationBanner";
 import { useAuth } from "@/hooks/useAuth";
+import { isGamificationExcluded } from "@/lib/commitmentFlag";
 import { useUILanguage } from "@/hooks/useUILanguage";
 import { supabase } from "@/integrations/supabase/client";
 import { withWriteRetry } from "@/lib/netRetry";
