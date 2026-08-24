@@ -82,6 +82,7 @@ import StreakTracker from "@/components/StreakTracker";
 import MonthlyStreakTracker from "@/components/MonthlyStreakTracker";
 import NotificationBanner from "@/components/NotificationBanner";
 import { useAuth } from "@/hooks/useAuth";
+import { isGamificationExcluded } from "@/lib/commitmentFlag";
 import { useUILanguage } from "@/hooks/useUILanguage";
 import { supabase } from "@/integrations/supabase/client";
 import { withWriteRetry } from "@/lib/netRetry";
@@ -2239,6 +2240,8 @@ function BonusModelSection({
   isTopTier: boolean;
   umsatz: number;
 }) {
+  const { user: bonusUser } = useAuth();
+  const hideStreaks = isGamificationExcluded(bonusUser?.id);
   const [demoMode, setDemoMode] = useState(false);
   const [demoTierIndex, setDemoTierIndex] = useState(0);
 
@@ -2484,6 +2487,7 @@ function BonusModelSection({
           )}
         </motion.div>
 
+        {!hideStreaks && (<>
         {/* Spacer before streaks */}
         <div className="h-6 lg:h-8" />
 
@@ -2525,16 +2529,19 @@ function BonusModelSection({
           </div>
           <MonthlyStreakTracker dailyRevenue={umsatz} />
         </motion.div>
+        </>)}
       </motion.div>
 
       <p className="text-[10px] lg:text-xs text-muted-foreground">
         Deine Rate gilt für den <strong className="text-foreground">gesamten Monatsumsatz</strong> und wird automatisch
         angepasst.
       </p>
-      <p className="text-[10px] lg:text-xs text-muted-foreground">
-        7 Tage × 30€ = <strong className="text-foreground">Account Upgrade</strong> · 30 Tage × 100€ ={" "}
-        <strong className="text-foreground">Elite Stufe 💎</strong>
-      </p>
+      {!hideStreaks && (
+        <p className="text-[10px] lg:text-xs text-muted-foreground">
+          7 Tage × 30€ = <strong className="text-foreground">Account Upgrade</strong> · 30 Tage × 100€ ={" "}
+          <strong className="text-foreground">Elite Stufe 💎</strong>
+        </p>
+      )}
     </motion.section>
   );
 }
