@@ -2529,6 +2529,7 @@ function BonusModelSection({
           </div>
           <MonthlyStreakTracker dailyRevenue={umsatz} />
         </motion.div>
+        </>)}
       </motion.div>
 
       <p className="text-[10px] lg:text-xs text-muted-foreground">
