@@ -2536,10 +2536,12 @@ function BonusModelSection({
         Deine Rate gilt für den <strong className="text-foreground">gesamten Monatsumsatz</strong> und wird automatisch
         angepasst.
       </p>
-      <p className="text-[10px] lg:text-xs text-muted-foreground">
-        7 Tage × 30€ = <strong className="text-foreground">Account Upgrade</strong> · 30 Tage × 100€ ={" "}
-        <strong className="text-foreground">Elite Stufe 💎</strong>
-      </p>
+      {!hideStreaks && (
+        <p className="text-[10px] lg:text-xs text-muted-foreground">
+          7 Tage × 30€ = <strong className="text-foreground">Account Upgrade</strong> · 30 Tage × 100€ ={" "}
+          <strong className="text-foreground">Elite Stufe 💎</strong>
+        </p>
+      )}
     </motion.section>
   );
 }
