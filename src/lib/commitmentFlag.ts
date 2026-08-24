@@ -16,8 +16,19 @@ export const COMMITMENT_RELEASE_AT = "2026-07-09T05:00:00Z";
 
 export const COMMITMENT_RELEASE_TO_ALL = true;
 
+// Chatter, die weder Commitment-Ritual (Pop-up + Online-Zeiten) noch Streak-Karten sehen.
+export const GAMIFICATION_EXCLUDED: string[] = [
+  "170b30d0-c3a4-4272-ab57-302860e9e025", // Philip S
+];
+
+export function isGamificationExcluded(userId: string | null | undefined): boolean {
+  if (!userId) return false;
+  return GAMIFICATION_EXCLUDED.includes(userId);
+}
+
 export function isCommitmentTester(userId: string | null | undefined): boolean {
   if (!userId) return false;
+  if (isGamificationExcluded(userId)) return false;
   if (COMMITMENT_RELEASE_TO_ALL && Date.now() >= Date.parse(COMMITMENT_RELEASE_AT)) return true;
   return COMMITMENT_ALLOWLIST.includes(userId);
 }
