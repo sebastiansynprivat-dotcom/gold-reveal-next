@@ -7309,6 +7309,10 @@ export default function AdminDashboard() {
                       } else {
                         if (requestFilter === "followup_due") {
                           if (!needsFollowUp(r)) return false;
+                        } else if (requestFilter === "compliance_review") {
+                          if (r.compliance_status !== "flagged") return false;
+                        } else if (requestFilter === "auto_forwarded") {
+                          if (!r.auto_forwarded) return false;
                         } else {
                           if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
                           if (requestFilter !== "all" && r.status !== requestFilter) return false;
