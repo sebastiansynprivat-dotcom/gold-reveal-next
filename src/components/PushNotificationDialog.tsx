@@ -10,7 +10,7 @@ const PUSH_DIALOG_KEY = "push_notification_dialog_seen";
 const perkIcons = [TrendingUp, Sparkles, Users];
 const perkKeys = ["pushDialog.perk1", "pushDialog.perk2", "pushDialog.perk3"];
 
-export default function PushNotificationDialog() {
+export default function PushNotificationDialog({ allowBrowser = false }: { allowBrowser?: boolean }) {
   const { t } = useUILanguage();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -22,7 +22,9 @@ export default function PushNotificationDialog() {
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as any).standalone === true;
-    if (!isStandalone) return;
+    // iOS only supports web push inside an installed PWA.
+    const iosLike = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (!isStandalone && !(allowBrowser && !iosLike)) return;
 
     const alreadySeen = localStorage.getItem(PUSH_DIALOG_KEY);
     if (alreadySeen) return;
@@ -34,7 +36,7 @@ export default function PushNotificationDialog() {
         return () => clearTimeout(timer);
       }
     });
-  }, []);
+  }, [allowBrowser]);
 
   const handleActivate = async () => {
     setLoading(true);

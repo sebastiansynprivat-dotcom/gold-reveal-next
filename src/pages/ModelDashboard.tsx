@@ -8,6 +8,8 @@ import GoldParticles from "@/components/GoldParticles";
 import ModelProfileForm from "@/components/ModelProfileForm";
 import ModelHomeDashboard from "@/components/ModelHomeDashboard";
 import { useAppPresence } from "@/hooks/useAppPresence";
+import PushNotificationDialog from "@/components/PushNotificationDialog";
+import NotificationBanner from "@/components/NotificationBanner";
 
 export default function ModelDashboard() {
   useAppPresence("model");
@@ -302,6 +304,8 @@ export default function ModelDashboard() {
           </>
         )}
       </div>
+      <PushNotificationDialog allowBrowser />
+      <NotificationBanner allowBrowser />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { isPushSubscribed, subscribeToPush } from "@/lib/pushNotifications";
 import { toast } from "sonner";
 import { useUILanguage } from "@/hooks/useUILanguage";
 
-export default function NotificationBanner() {
+export default function NotificationBanner({ allowBrowser = false }: { allowBrowser?: boolean }) {
   const { t } = useUILanguage();
   const [show, setShow] = useState(false);
   const [isDenied, setIsDenied] = useState(false);
@@ -14,7 +14,10 @@ export default function NotificationBanner() {
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as any).standalone === true;
-    if (!isStandalone) return;
+    // iOS only supports web push inside an installed PWA.
+    const iosLike = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (!isStandalone && !(allowBrowser && !iosLike)) return;
+
 
     isPushSubscribed().then((subscribed) => {
       if (subscribed) return;
@@ -34,7 +37,7 @@ export default function NotificationBanner() {
         setIsDenied(false);
       }
     });
-  }, []);
+  }, [allowBrowser]);
 
   if (!show) return null;
 
