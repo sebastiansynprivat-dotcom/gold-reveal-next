@@ -2377,6 +2377,10 @@ export type Database = {
         Row: {
           admin_comment: string | null
           attachments: Json
+          auto_forwarded: boolean
+          compliance_checked_at: string | null
+          compliance_reason: string | null
+          compliance_status: string
           content_link: string | null
           created_at: string
           customer_name: string | null
@@ -2396,6 +2400,10 @@ export type Database = {
         Insert: {
           admin_comment?: string | null
           attachments?: Json
+          auto_forwarded?: boolean
+          compliance_checked_at?: string | null
+          compliance_reason?: string | null
+          compliance_status?: string
           content_link?: string | null
           created_at?: string
           customer_name?: string | null
@@ -2415,6 +2423,10 @@ export type Database = {
         Update: {
           admin_comment?: string | null
           attachments?: Json
+          auto_forwarded?: boolean
+          compliance_checked_at?: string | null
+          compliance_reason?: string | null
+          compliance_status?: string
           content_link?: string | null
           created_at?: string
           customer_name?: string | null
