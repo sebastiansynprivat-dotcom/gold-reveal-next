@@ -37,7 +37,7 @@ export default function NotificationBanner({ allowBrowser = false }: { allowBrow
         setIsDenied(false);
       }
     });
-  }, []);
+  }, [allowBrowser]);
 
   if (!show) return null;
 
