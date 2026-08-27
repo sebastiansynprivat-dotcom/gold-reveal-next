@@ -304,8 +304,8 @@ export default function ModelDashboard() {
           </>
         )}
       </div>
-      <PushNotificationDialog />
-      <NotificationBanner />
+      <PushNotificationDialog allowBrowser />
+      <NotificationBanner allowBrowser />
     </div>
   );
 }
