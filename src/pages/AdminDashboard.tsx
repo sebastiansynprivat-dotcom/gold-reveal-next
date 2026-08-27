@@ -973,7 +973,7 @@ export default function AdminDashboard() {
   // Zeitpunkt des letzten Anfragen-Loads – verhindert ein komplettes Neuladen,
   // wenn man nur kurz aus der App raus und wieder rein wechselt.
   const lastRequestsLoadRef = useRef(0);
-  const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "waiting_feedback" | "rejected" | "archived" | "followup_due">(
+  const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "waiting_feedback" | "rejected" | "archived" | "followup_due" | "compliance_review" | "auto_forwarded">(
     "all",
   );
   const [followupNoteDraft, setFollowupNoteDraft] = useState<Record<string, string>>({});
