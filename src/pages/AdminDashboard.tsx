@@ -7134,6 +7134,71 @@ export default function AdminDashboard() {
                     );
                   })()}
 
+                  {/* KI-Compliance: Zur Überprüfung + automatisch weitergeleitet */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {(
+                      [
+                        {
+                          key: "compliance_review" as const,
+                          title: "Zur Überprüfung (KI)",
+                          sub: "Kritisch eingestuft — nicht ans Model weitergeleitet",
+                          count: modelRequests.filter((r) => r.compliance_status === "flagged").length,
+                          ring: "ring-red-400 border-red-400/40",
+                          idle: "border-red-400/20 hover:border-red-400/40",
+                          badge: "bg-red-500/20 text-red-300 ring-1 ring-red-400/40",
+                          iconWrap: "bg-red-500/15",
+                          iconClass: "text-red-400",
+                          Icon: AlertTriangle,
+                        },
+                        {
+                          key: "auto_forwarded" as const,
+                          title: "Automatisch freigegeben",
+                          sub: "KI-geprüft & direkt ans Model weitergeleitet",
+                          count: modelRequests.filter((r) => r.auto_forwarded).length,
+                          ring: "ring-emerald-400 border-emerald-400/40",
+                          idle: "border-emerald-400/20 hover:border-emerald-400/40",
+                          badge: "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/40",
+                          iconWrap: "bg-emerald-500/15",
+                          iconClass: "text-emerald-400",
+                          Icon: Sparkles,
+                        },
+                      ]
+                    ).map((c) => {
+                      const isActive = requestFilter === c.key;
+                      return (
+                        <button
+                          key={c.key}
+                          onClick={() => {
+                            setRequestFilter(isActive ? "all" : c.key);
+                            setContentLinkFilter("all");
+                          }}
+                          className={cn(
+                            "w-full glass-card-subtle rounded-xl px-4 py-3 flex items-center gap-3 transition-all border",
+                            isActive ? `ring-2 ${c.ring}` : c.idle,
+                          )}
+                        >
+                          <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", c.iconWrap)}>
+                            <c.Icon className={cn("h-4 w-4", c.iconClass, c.key === "compliance_review" && c.count > 0 && "animate-pulse")} />
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="text-xs font-bold text-foreground">{c.title}</p>
+                            <p className="text-[10px] text-muted-foreground">{c.sub}</p>
+                          </div>
+                          <span
+                            className={cn(
+                              "min-w-[36px] h-9 px-2 rounded-lg flex items-center justify-center text-lg font-bold",
+                              c.count > 0 ? c.badge : "text-muted-foreground",
+                            )}
+                          >
+                            {c.count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+
+
 
                   <section className="glass-card rounded-xl overflow-hidden">
                     <div className="px-4 sm:px-5 py-4 border-b border-border/50 flex flex-col gap-3 sm:flex-row sm:items-center">
