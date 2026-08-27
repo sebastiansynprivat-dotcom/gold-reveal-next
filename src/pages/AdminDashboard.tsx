@@ -7604,7 +7604,22 @@ export default function AdminDashboard() {
                                           />
                                           {statusConfig.label}
                                         </span>
+                                        {req.compliance_status === "flagged" && (
+                                          <span className="flex items-center gap-1 text-[10px] font-bold uppercase px-1.5 h-4 rounded border border-red-500/40 bg-red-500/15 text-red-300">
+                                            <AlertTriangle className="h-2.5 w-2.5" /> KI: prüfen
+                                          </span>
+                                        )}
+                                        {req.auto_forwarded && (
+                                          <span className="flex items-center gap-1 text-[10px] font-bold uppercase px-1.5 h-4 rounded border border-emerald-500/40 bg-emerald-500/15 text-emerald-300">
+                                            <Sparkles className="h-2.5 w-2.5" /> KI-freigegeben
+                                          </span>
+                                        )}
                                       </div>
+                                      {req.compliance_status === "flagged" && req.compliance_reason && (
+                                        <p className="mt-1 text-[11px] text-red-300/90 leading-snug">
+                                          KI-Hinweis: {req.compliance_reason}
+                                        </p>
+                                      )}
                                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
                                         <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-border/50">
                                           {req.request_type === "individual" ? "Individuell" : "Allgemein"}
