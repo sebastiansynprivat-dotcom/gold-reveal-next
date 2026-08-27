@@ -259,10 +259,14 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
         body: {
           event: "new_request",
           title: `📨 NEUE ANFRAGE · ${platform}`,
-          body: `${modelName.trim()} · ${requestType === "individual" ? `Individuell${price ? ` (${price}€)` : ""}` : "Allgemein"}`,
+          body: `${resolvedName} · ${requestType === "individual" ? `Individuell${price ? ` (${price}€)` : ""}` : "Allgemein"}`,
           url: "/admin",
         },
       }).catch(() => {});
+      // Fire-and-forget AI compliance screening (auto-forwards conform requests).
+      supabase.functions
+        .invoke("screen-model-request", { body: { requestId: draftRequestId } })
+        .catch(() => {});
       toast.success("Anfrage erfolgreich gesendet! ✅");
     }
 
