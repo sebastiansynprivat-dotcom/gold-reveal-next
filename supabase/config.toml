@@ -51,6 +51,8 @@ project_id = "acznyhzgbkdcmnbqvptt"
     verify_jwt = false
   [functions.scrape-instagram-posts]
     verify_jwt = false
+  [functions.screen-model-request]
+    verify_jwt = false
   [functions.send-admin-push]
     verify_jwt = false
   [functions.send-notification]
