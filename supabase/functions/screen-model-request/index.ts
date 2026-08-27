@@ -123,7 +123,8 @@ Deno.serve(async (req) => {
     let forwardedModelUserId: string | null = null;
 
     if (verdict === "ok" && (reqRow as any).status === "pending") {
-      update.status = "accepted";
+      // Keep status "pending" (offen) — admins still decide manually.
+      // We only mark it as KI-approved + forwarded so the model sees it.
       update.forwarded_to_model_at = nowIso;
       update.auto_forwarded = true;
 
