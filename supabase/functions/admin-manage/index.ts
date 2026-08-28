@@ -341,15 +341,30 @@ Deno.serve(async (req) => {
         );
       }
 
-      await serviceClient
+      // Insert the new role FIRST, so a failure can never leave the user without
+      // any admin role (that would lock them out of the admin area entirely).
+      const { error: insertRoleErr } = await serviceClient
+        .from("user_roles")
+        .insert({ user_id: target_user_id, role: new_role });
+
+      if (insertRoleErr && !insertRoleErr.message?.includes("duplicate")) {
+        console.error("admin-manage: change_role insert failed", insertRoleErr.message);
+        return new Response(JSON.stringify({ error: insertRoleErr.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { error: cleanupErr } = await serviceClient
         .from("user_roles")
         .delete()
         .eq("user_id", target_user_id)
+        .neq("role", new_role)
         .in("role", ["admin", "super_admin", "sub_admin"]);
 
-      await serviceClient
-        .from("user_roles")
-        .insert({ user_id: target_user_id, role: new_role });
+      if (cleanupErr) {
+        console.error("admin-manage: change_role cleanup failed", cleanupErr.message);
+      }
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
