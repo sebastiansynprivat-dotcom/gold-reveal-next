@@ -2636,10 +2636,20 @@ export default function AdminDashboard() {
   const saveAdminLanguage = async (targetUserId: string, next: "de" | "en") => {
     setSavingAdminLang(targetUserId);
     try {
-      const { error } = await supabase
+      // profiles.user_id has a partial unique index, which ON CONFLICT cannot
+      // match — so update first and only insert when no row exists yet.
+      const { data: updated, error: updErr } = await supabase
         .from("profiles")
-        .upsert({ user_id: targetUserId, group_name: "", ui_language: next } as any, { onConflict: "user_id" });
-      if (error) throw error;
+        .update({ ui_language: next } as any)
+        .eq("user_id", targetUserId)
+        .select("id");
+      if (updErr) throw updErr;
+      if (!updated || updated.length === 0) {
+        const { error: insErr } = await supabase
+          .from("profiles")
+          .insert({ user_id: targetUserId, group_name: "", ui_language: next } as any);
+        if (insErr) throw insErr;
+      }
       setAdminLanguages((prev) => ({ ...prev, [targetUserId]: next }));
       setAdminList((prev) => prev.map((a) => (a.user_id === targetUserId ? { ...a, ui_language: next } : a)));
       toast.success(next === "en" ? "Language set to English" : "Sprache auf Deutsch gesetzt");
