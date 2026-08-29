@@ -641,8 +641,8 @@ export default function CommitmentPrompt() {
       <Dialog
         open={showEvening}
         onOpenChange={(o) => {
-          setShowEvening(o);
-          if (!o) setRewardScreen(null);
+          if (!o) closeEvening();
+          else setShowEvening(true);
         }}
       >
         <DialogContent className="max-w-md bg-black/95 border border-yellow-500/30 shadow-[0_0_60px_-15px_rgba(234,179,8,0.5)]">
