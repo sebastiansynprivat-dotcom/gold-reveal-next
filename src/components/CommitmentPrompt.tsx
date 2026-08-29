@@ -189,7 +189,8 @@ export default function CommitmentPrompt() {
   }
 
   async function answerEvening(confirmed: boolean) {
-    if (!today) return;
+    const target = checkinRow ?? today;
+    if (!target) return;
     setSaving(true);
     const { error } = await supabase
       .from("chatter_daily_commitment" as any)
@@ -197,7 +198,7 @@ export default function CommitmentPrompt() {
         confirmed_by_user: confirmed,
         confirmed_at: new Date().toISOString(),
       })
-      .eq("id", today.id);
+      .eq("id", target.id);
     setSaving(false);
     if (error) {
       toast.error(de ? "Fehler" : "Error");
