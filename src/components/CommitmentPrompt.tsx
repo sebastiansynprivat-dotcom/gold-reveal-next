@@ -141,12 +141,17 @@ export default function CommitmentPrompt() {
       const forceEvening = params.get("checkin") === "1";
       const hour = berlinHour();
 
-      // Commitment kann den ganzen Tag bis 20 Uhr nachgeholt werden — sonst
-      // verpassen Chatter, die erst nachmittags online kommen, den Tag komplett.
-      if (!row && (forceCommit || hour < 20)) {
-        setShowCommit(true);
-      } else if (row && row.confirmed_by_user === null && (forceEvening || hour >= 18)) {
+      // Verpasster Abend-Check-in hat Vorrang: erst nachholen, dann neuer Tag.
+      if (missed) {
+        setCheckinRow(missed);
         setShowEvening(true);
+      } else if (row && row.confirmed_by_user === null && (forceEvening || hour >= 18)) {
+        setCheckinRow(row);
+        setShowEvening(true);
+      } else if (!row && (forceCommit || hour < 20)) {
+        // Commitment kann den ganzen Tag bis 20 Uhr nachgeholt werden — sonst
+        // verpassen Chatter, die erst nachmittags online kommen, den Tag komplett.
+        setShowCommit(true);
       }
     })();
   }, []);
