@@ -224,6 +224,26 @@ export default function CommitmentPrompt() {
   const toggleSlot = (s: Slot) =>
     setSelectedSlots((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
 
+  const isBackfill = !!checkinRow && checkinRow.date !== berlinDate();
+  const backfillLabel = checkinRow
+    ? new Date(`${checkinRow.date}T12:00:00`).toLocaleDateString(de ? "de-DE" : "en-GB", {
+        weekday: "long",
+        day: "2-digit",
+        month: "2-digit",
+      })
+    : "";
+
+  function closeEvening() {
+    setShowEvening(false);
+    setRewardScreen(null);
+    setCheckinRow(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("checkin");
+    window.history.replaceState({}, "", url.toString());
+    // Nach einem nachgeholten Check-in ggf. direkt das heutige Commitment abfragen.
+    if (isBackfill && !today && berlinHour() < 20) setShowCommit(true);
+  }
+
   const reliabilityScore = Math.round((selectedSlots.length / 4) * 100);
   const fullCommitter = selectedSlots.length === 4;
   const quote = getQuoteForToday(de ? "de" : "en");
