@@ -685,13 +685,7 @@ export default function CommitmentPrompt() {
                   {de ? "Streak gesichert um 23 Uhr. Morgen weiter." : "Streak locks at 11 PM. See you tomorrow."}
                 </p>
                 <Button
-                  onClick={() => {
-                    setShowEvening(false);
-                    setRewardScreen(null);
-                    const url = new URL(window.location.href);
-                    url.searchParams.delete("checkin");
-                    window.history.replaceState({}, "", url.toString());
-                  }}
+                  onClick={closeEvening}
                   className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold w-full"
                 >
                   {de ? "Weiter" : "Continue"}
