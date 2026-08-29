@@ -712,13 +712,7 @@ export default function CommitmentPrompt() {
                   </p>
                 </div>
                 <Button
-                  onClick={() => {
-                    setShowEvening(false);
-                    setRewardScreen(null);
-                    const url = new URL(window.location.href);
-                    url.searchParams.delete("checkin");
-                    window.history.replaceState({}, "", url.toString());
-                  }}
+                  onClick={closeEvening}
                   variant="outline"
                   className="border-white/20 bg-white/5 text-white/80 hover:bg-white/10 w-full"
                 >
@@ -731,11 +725,22 @@ export default function CommitmentPrompt() {
               <motion.div key="question" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-bold text-white">
-                    {de
-                      ? "Warst du heute wie versprochen für deine Models da?"
-                      : "Were you there for your models today as promised?"}
+                    {isBackfill
+                      ? de
+                        ? `Nachtrag: Warst du am ${backfillLabel} wie versprochen da?`
+                        : `Catch-up: were you there on ${backfillLabel} as promised?`
+                      : de
+                        ? "Warst du heute wie versprochen für deine Models da?"
+                        : "Were you there for your models today as promised?"}
                   </DialogTitle>
                 </DialogHeader>
+                {isBackfill && (
+                  <p className="text-xs text-white/50 -mt-1">
+                    {de
+                      ? "Du hast den Check-in verpasst — hol ihn hier nach, dein Streak bleibt erhalten."
+                      : "You missed this check-in — catch up here, your streak stays intact."}
+                  </p>
+                )}
 
                 <div className="py-4">
                   <div className="flex items-start gap-3 rounded-lg bg-yellow-500/5 border border-yellow-500/20 p-3">
