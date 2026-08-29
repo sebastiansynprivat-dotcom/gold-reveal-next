@@ -98,6 +98,7 @@ export default function CommitmentPrompt() {
   const [streak, setStreak] = useState<number>(0);
   const [avg7d, setAvg7d] = useState<number>(0);
   const [rewardScreen, setRewardScreen] = useState<null | "yes" | "no">(null);
+  const [checkinRow, setCheckinRow] = useState<Row | null>(null);
 
   useEffect(() => {
     (async () => {
