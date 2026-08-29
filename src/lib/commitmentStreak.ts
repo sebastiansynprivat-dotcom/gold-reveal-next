@@ -10,11 +10,16 @@ export function berlinDate(offsetDays = 0): string {
  * Zählt Tage mit confirmed_by_user === true rückwärts ab gestern.
  * Heute wird nicht mitgezählt (noch nicht bestätigt), bricht den Streak aber nicht.
  *
- * Kulanz: Tage ohne Eintrag oder ohne Antwort (z. B. weil der Chatter gar nicht
- * gefragt wurde) pausieren den Streak nur — erst 3 solche Tage am Stück brechen ihn.
- * Ein ehrliches "Nein" (confirmed_by_user === false) pausiert ebenfalls.
+ * Wichtig: Ein Tag ohne Antwort (der Chatter hat das Abend-Pop-up nie gesehen)
+ * darf den Streak NICHT brechen — sonst verliert man nach 40+ Tagen alles, nur
+ * weil man abends nicht im Dashboard war. Solche Tage sind neutral (werden
+ * übersprungen). Erst längere komplette Inaktivität beendet den Streak.
+ *
+ * Ein ehrliches "Nein" (confirmed_by_user === false) pausiert nur — erst 3
+ * "Nein"-Tage am Stück brechen den Streak.
  */
-const GRACE_DAYS = 3;
+const NO_GRACE_DAYS = 3;
+const MAX_NEUTRAL_DAYS = 14;
 
 export async function getCurrentStreak(userId: string): Promise<number> {
   const { data } = await supabase
@@ -22,25 +27,31 @@ export async function getCurrentStreak(userId: string): Promise<number> {
     .select("date, confirmed_by_user")
     .eq("user_id", userId)
     .order("date", { ascending: false })
-    .limit(120);
+    .limit(400);
 
   const rows = ((data as unknown) as { date: string; confirmed_by_user: boolean | null }[] | null) ?? [];
   const map = new Map(rows.map((r) => [r.date, r.confirmed_by_user]));
 
   let streak = 0;
-  let gap = 0;
-  for (let i = 1; i <= 120; i++) {
+  let noStreak = 0;
+  let neutral = 0;
+  for (let i = 1; i <= 365; i++) {
     const day = berlinDate(-i);
+    const has = map.has(day);
     const v = map.get(day);
     if (v === true) {
       streak++;
-      gap = 0;
+      noStreak = 0;
+      neutral = 0;
+    } else if (has && v === false) {
+      // ehrliches "Nein" → pausiert
+      noStreak++;
+      neutral = 0;
+      if (noStreak >= NO_GRACE_DAYS) break;
     } else {
-      // kein Eintrag, keine Antwort oder ehrliches "Nein" → pausiert
-      gap++;
-      if (gap >= GRACE_DAYS) break;
-      // vor dem ersten bestätigten Tag gibt es nichts zu schützen
-      if (streak === 0 && gap >= GRACE_DAYS) break;
+      // kein Eintrag oder keine Antwort → neutral, bricht nichts
+      neutral++;
+      if (neutral >= MAX_NEUTRAL_DAYS) break;
     }
   }
   return streak;

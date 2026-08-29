@@ -98,6 +98,7 @@ export default function CommitmentPrompt() {
   const [streak, setStreak] = useState<number>(0);
   const [avg7d, setAvg7d] = useState<number>(0);
   const [rewardScreen, setRewardScreen] = useState<null | "yes" | "no">(null);
+  const [checkinRow, setCheckinRow] = useState<Row | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -106,14 +107,21 @@ export default function CommitmentPrompt() {
       if (!isCommitmentTester(user.id)) return;
       setUserId(user.id);
 
+      // Letzte 4 Tage laden — damit ein verpasster Abend-Check-in nachgeholt
+      // werden kann und der Streak nicht unnötig verloren geht.
       const { data } = await supabase
         .from("chatter_daily_commitment" as any)
         .select("id, date, slots, daily_goal, confirmed_by_user")
         .eq("user_id", user.id)
-        .eq("date", berlinDate())
-        .maybeSingle();
-      const row = (data as unknown) as Row | null;
+        .gte("date", berlinDate(-3))
+        .order("date", { ascending: false });
+      const recent = ((data as unknown) as Row[] | null) ?? [];
+      const row = recent.find((r) => r.date === berlinDate()) ?? null;
       setToday(row);
+      // Ältester unbeantworteter Tag zuerst nachholen (heute ausgenommen).
+      const missed = recent
+        .filter((r) => r.date !== berlinDate() && r.confirmed_by_user === null)
+        .sort((a, b) => a.date.localeCompare(b.date))[0] ?? null;
 
       const { data: prof } = await supabase
         .from("profiles")
@@ -134,12 +142,17 @@ export default function CommitmentPrompt() {
       const forceEvening = params.get("checkin") === "1";
       const hour = berlinHour();
 
-      // Commitment kann den ganzen Tag bis 20 Uhr nachgeholt werden — sonst
-      // verpassen Chatter, die erst nachmittags online kommen, den Tag komplett.
-      if (!row && (forceCommit || hour < 20)) {
-        setShowCommit(true);
-      } else if (row && row.confirmed_by_user === null && (forceEvening || hour >= 18)) {
+      // Verpasster Abend-Check-in hat Vorrang: erst nachholen, dann neuer Tag.
+      if (missed) {
+        setCheckinRow(missed);
         setShowEvening(true);
+      } else if (row && row.confirmed_by_user === null && (forceEvening || hour >= 18)) {
+        setCheckinRow(row);
+        setShowEvening(true);
+      } else if (!row && (forceCommit || hour < 20)) {
+        // Commitment kann den ganzen Tag bis 20 Uhr nachgeholt werden — sonst
+        // verpassen Chatter, die erst nachmittags online kommen, den Tag komplett.
+        setShowCommit(true);
       }
     })();
   }, []);
@@ -176,7 +189,8 @@ export default function CommitmentPrompt() {
   }
 
   async function answerEvening(confirmed: boolean) {
-    if (!today) return;
+    const target = checkinRow ?? today;
+    if (!target) return;
     setSaving(true);
     const { error } = await supabase
       .from("chatter_daily_commitment" as any)
@@ -184,7 +198,7 @@ export default function CommitmentPrompt() {
         confirmed_by_user: confirmed,
         confirmed_at: new Date().toISOString(),
       })
-      .eq("id", today.id);
+      .eq("id", target.id);
     setSaving(false);
     if (error) {
       toast.error(de ? "Fehler" : "Error");
@@ -209,6 +223,26 @@ export default function CommitmentPrompt() {
 
   const toggleSlot = (s: Slot) =>
     setSelectedSlots((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
+
+  const isBackfill = !!checkinRow && checkinRow.date !== berlinDate();
+  const backfillLabel = checkinRow
+    ? new Date(`${checkinRow.date}T12:00:00`).toLocaleDateString(de ? "de-DE" : "en-GB", {
+        weekday: "long",
+        day: "2-digit",
+        month: "2-digit",
+      })
+    : "";
+
+  function closeEvening() {
+    setShowEvening(false);
+    setRewardScreen(null);
+    setCheckinRow(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("checkin");
+    window.history.replaceState({}, "", url.toString());
+    // Nach einem nachgeholten Check-in ggf. direkt das heutige Commitment abfragen.
+    if (isBackfill && !today && berlinHour() < 20) setShowCommit(true);
+  }
 
   const reliabilityScore = Math.round((selectedSlots.length / 4) * 100);
   const fullCommitter = selectedSlots.length === 4;
@@ -607,8 +641,8 @@ export default function CommitmentPrompt() {
       <Dialog
         open={showEvening}
         onOpenChange={(o) => {
-          setShowEvening(o);
-          if (!o) setRewardScreen(null);
+          if (!o) closeEvening();
+          else setShowEvening(true);
         }}
       >
         <DialogContent className="max-w-md bg-black/95 border border-yellow-500/30 shadow-[0_0_60px_-15px_rgba(234,179,8,0.5)]">
@@ -651,13 +685,7 @@ export default function CommitmentPrompt() {
                   {de ? "Streak gesichert um 23 Uhr. Morgen weiter." : "Streak locks at 11 PM. See you tomorrow."}
                 </p>
                 <Button
-                  onClick={() => {
-                    setShowEvening(false);
-                    setRewardScreen(null);
-                    const url = new URL(window.location.href);
-                    url.searchParams.delete("checkin");
-                    window.history.replaceState({}, "", url.toString());
-                  }}
+                  onClick={closeEvening}
                   className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold w-full"
                 >
                   {de ? "Weiter" : "Continue"}
@@ -684,13 +712,7 @@ export default function CommitmentPrompt() {
                   </p>
                 </div>
                 <Button
-                  onClick={() => {
-                    setShowEvening(false);
-                    setRewardScreen(null);
-                    const url = new URL(window.location.href);
-                    url.searchParams.delete("checkin");
-                    window.history.replaceState({}, "", url.toString());
-                  }}
+                  onClick={closeEvening}
                   variant="outline"
                   className="border-white/20 bg-white/5 text-white/80 hover:bg-white/10 w-full"
                 >
@@ -703,11 +725,22 @@ export default function CommitmentPrompt() {
               <motion.div key="question" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-bold text-white">
-                    {de
-                      ? "Warst du heute wie versprochen für deine Models da?"
-                      : "Were you there for your models today as promised?"}
+                    {isBackfill
+                      ? de
+                        ? `Nachtrag: Warst du am ${backfillLabel} wie versprochen da?`
+                        : `Catch-up: were you there on ${backfillLabel} as promised?`
+                      : de
+                        ? "Warst du heute wie versprochen für deine Models da?"
+                        : "Were you there for your models today as promised?"}
                   </DialogTitle>
                 </DialogHeader>
+                {isBackfill && (
+                  <p className="text-xs text-white/50 -mt-1">
+                    {de
+                      ? "Du hast den Check-in verpasst — hol ihn hier nach, dein Streak bleibt erhalten."
+                      : "You missed this check-in — catch up here, your streak stays intact."}
+                  </p>
+                )}
 
                 <div className="py-4">
                   <div className="flex items-start gap-3 rounded-lg bg-yellow-500/5 border border-yellow-500/20 p-3">
