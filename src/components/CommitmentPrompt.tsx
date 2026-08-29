@@ -106,14 +106,21 @@ export default function CommitmentPrompt() {
       if (!isCommitmentTester(user.id)) return;
       setUserId(user.id);
 
+      // Letzte 4 Tage laden — damit ein verpasster Abend-Check-in nachgeholt
+      // werden kann und der Streak nicht unnötig verloren geht.
       const { data } = await supabase
         .from("chatter_daily_commitment" as any)
         .select("id, date, slots, daily_goal, confirmed_by_user")
         .eq("user_id", user.id)
-        .eq("date", berlinDate())
-        .maybeSingle();
-      const row = (data as unknown) as Row | null;
+        .gte("date", berlinDate(-3))
+        .order("date", { ascending: false });
+      const recent = ((data as unknown) as Row[] | null) ?? [];
+      const row = recent.find((r) => r.date === berlinDate()) ?? null;
       setToday(row);
+      // Ältester unbeantworteter Tag zuerst nachholen (heute ausgenommen).
+      const missed = recent
+        .filter((r) => r.date !== berlinDate() && r.confirmed_by_user === null)
+        .sort((a, b) => a.date.localeCompare(b.date))[0] ?? null;
 
       const { data: prof } = await supabase
         .from("profiles")
