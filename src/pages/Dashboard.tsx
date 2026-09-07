@@ -1949,20 +1949,9 @@ export default function Dashboard() {
                                 );
                                 setReplyDrafts((prev) => ({ ...prev, [req.id]: "" }));
                                 setReplyAttachments((prev) => ({ ...prev, [req.id]: [] }));
-                                // If request was archived/rejected/waiting_feedback, reopen it so admins see it again
-                                if (
-                                  req.status === "archived" ||
-                                  req.status === "rejected" ||
-                                  req.status === "waiting_feedback"
-                                ) {
-                                  await supabase
-                                    .from("model_requests")
-                                    .update({ status: "in_progress" })
-                                    .eq("id", req.id);
-                                  setMyRequests((prev) =>
-                                    prev.map((r) => (r.id === req.id ? { ...r, status: "in_progress" } : r)),
-                                  );
-                                }
+                                // Status bleibt unverändert – neue Kommentare sind immer sichtbar,
+                                // ändern aber nie den Bearbeitungsstatus der Anfrage.
+
                                 // Fire-and-forget admin push (routed by platform: Maloum→Vanessa, sonst→Max)
                                 const _pm = String(req.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i);
                                 const _platform = _pm ? _pm[1].trim() : "";
