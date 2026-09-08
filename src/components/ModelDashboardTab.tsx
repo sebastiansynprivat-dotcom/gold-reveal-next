@@ -3444,15 +3444,42 @@ export default function ModelDashboardTab() {
                               {s.unavailable ? (
                                 <p className="text-[10px] text-destructive max-w-[140px]">{s.unavailable}</p>
                               ) : s.downloadUrl && !expired ? (
-                                <a
-                                  href={s.downloadUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  {...(s.inline ? {} : { download: "" })}
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    const url = s.downloadUrl!;
+                                    const today = new Date();
+                                    const dl = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+                                    const base = `${(s.platform || "statement").toLowerCase()}_${s.period || "unbekannt"}_${dl}`;
+                                    try {
+                                      const res = await fetch(url);
+                                      if (!res.ok) throw new Error(String(res.status));
+                                      const blob = await res.blob();
+                                      const type = blob.type || "";
+                                      const ext = type.includes("pdf")
+                                        ? "pdf"
+                                        : type.includes("csv")
+                                          ? "csv"
+                                          : type.includes("json")
+                                            ? "json"
+                                            : (url.split("?")[0].match(/\.([a-z0-9]{2,5})$/i)?.[1] || "pdf");
+                                      const href = URL.createObjectURL(blob);
+                                      const a = document.createElement("a");
+                                      a.href = href;
+                                      a.download = `${base}.${ext}`;
+                                      document.body.appendChild(a);
+                                      a.click();
+                                      a.remove();
+                                      setTimeout(() => URL.revokeObjectURL(href), 5000);
+                                    } catch {
+                                      window.open(url, "_blank", "noopener,noreferrer");
+                                    }
+                                  }}
                                   className="inline-flex items-center gap-1 text-[10px] text-accent hover:underline"
                                 >
                                   <Download className="h-3 w-3" /> Herunterladen
-                                </a>
+                                </button>
+
                               ) : (
                                 <p className="text-[10px] text-muted-foreground">Link abgelaufen</p>
                               )}
