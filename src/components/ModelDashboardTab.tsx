@@ -597,6 +597,8 @@ export default function ModelDashboardTab() {
   const [fetchMonth, setFetchMonth] = useState<number>(now.getMonth() + 1);
   const [fetchYear, setFetchYear] = useState<number>(now.getFullYear());
   const [fetchingRevenue, setFetchingRevenue] = useState(false);
+  const MONTH_LABELS_DE = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+  const STMT_YEARS = [now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1];
   // ── Payout statements (live only, links expire quickly) ──
   type PayoutStatement = {
     platform?: string; accountId?: string; id?: string; reference?: string;
