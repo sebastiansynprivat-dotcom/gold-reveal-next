@@ -597,6 +597,23 @@ export default function ModelDashboardTab() {
   const [fetchMonth, setFetchMonth] = useState<number>(now.getMonth() + 1);
   const [fetchYear, setFetchYear] = useState<number>(now.getFullYear());
   const [fetchingRevenue, setFetchingRevenue] = useState(false);
+  // ── Payout statements (live only, links expire quickly) ──
+  type PayoutStatement = {
+    platform?: string; accountId?: string; id?: string; reference?: string;
+    period?: string; periodBegin?: string; periodEnd?: string;
+    amount?: number; currency?: string; pending?: boolean;
+    downloadUrl?: string; inline?: boolean; expiresAt?: string; unavailable?: string | null;
+  };
+  const [stmtMode, setStmtMode] = useState<"month" | "range">("month");
+  const [stmtMonth, setStmtMonth] = useState<number>(now.getMonth() + 1);
+  const [stmtYear, setStmtYear] = useState<number>(now.getFullYear());
+  const [stmtFromMonth, setStmtFromMonth] = useState<number>(1);
+  const [stmtFromYear, setStmtFromYear] = useState<number>(now.getFullYear());
+  const [stmtToMonth, setStmtToMonth] = useState<number>(now.getMonth() + 1);
+  const [stmtToYear, setStmtToYear] = useState<number>(now.getFullYear());
+  const [stmtLoading, setStmtLoading] = useState(false);
+  const [stmtRows, setStmtRows] = useState<PayoutStatement[] | null>(null);
+  const [stmtFetchedAt, setStmtFetchedAt] = useState<string | null>(null);
   const [confirmOverwrite, setConfirmOverwrite] = useState(false);
   const [lastFetchInfo, setLastFetchInfo] = useState<{ at: string | null; month: number | null; year: number | null }>({ at: null, month: null, year: null });
 
