@@ -597,6 +597,25 @@ export default function ModelDashboardTab() {
   const [fetchMonth, setFetchMonth] = useState<number>(now.getMonth() + 1);
   const [fetchYear, setFetchYear] = useState<number>(now.getFullYear());
   const [fetchingRevenue, setFetchingRevenue] = useState(false);
+  const MONTH_LABELS_DE = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+  const STMT_YEARS = [now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1];
+  // ── Payout statements (live only, links expire quickly) ──
+  type PayoutStatement = {
+    platform?: string; accountId?: string; id?: string; reference?: string;
+    period?: string; periodBegin?: string; periodEnd?: string;
+    amount?: number; currency?: string; pending?: boolean;
+    downloadUrl?: string; inline?: boolean; expiresAt?: string; unavailable?: string | null;
+  };
+  const [stmtMode, setStmtMode] = useState<"month" | "range">("month");
+  const [stmtMonth, setStmtMonth] = useState<number>(now.getMonth() + 1);
+  const [stmtYear, setStmtYear] = useState<number>(now.getFullYear());
+  const [stmtFromMonth, setStmtFromMonth] = useState<number>(1);
+  const [stmtFromYear, setStmtFromYear] = useState<number>(now.getFullYear());
+  const [stmtToMonth, setStmtToMonth] = useState<number>(now.getMonth() + 1);
+  const [stmtToYear, setStmtToYear] = useState<number>(now.getFullYear());
+  const [stmtLoading, setStmtLoading] = useState(false);
+  const [stmtRows, setStmtRows] = useState<PayoutStatement[] | null>(null);
+  const [stmtFetchedAt, setStmtFetchedAt] = useState<string | null>(null);
   const [confirmOverwrite, setConfirmOverwrite] = useState(false);
   const [lastFetchInfo, setLastFetchInfo] = useState<{ at: string | null; month: number | null; year: number | null }>({ at: null, month: null, year: null });
 
@@ -3249,6 +3268,207 @@ export default function ModelDashboardTab() {
                     })}
                   </div>
                 </div>
+
+                {/* ── Auszahlungsbelege (Payout Statements, live) ── */}
+                <div className="rounded-xl border border-accent/25 bg-secondary/20 p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] uppercase tracking-wider text-accent/90 font-semibold">
+                      Auszahlungsbelege
+                    </p>
+                    <div className="flex items-center gap-1">
+                      {(["month", "range"] as const).map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setStmtMode(m)}
+                          className={cn(
+                            "px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors",
+                            stmtMode === m
+                              ? "bg-accent/20 text-accent border border-accent/40"
+                              : "text-muted-foreground border border-transparent hover:text-foreground",
+                          )}
+                        >
+                          {m === "month" ? "Einzelner Monat" : "Zeitraum"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {stmtMode === "month" ? (
+                    <div className="flex items-center gap-2">
+                      <Select value={String(stmtMonth)} onValueChange={(v) => setStmtMonth(Number(v))}>
+                        <SelectTrigger className="w-[130px] h-9 text-sm bg-secondary/40 border-border/40"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {MONTH_LABELS_DE.map((label, i) => (
+                            <SelectItem key={i + 1} value={String(i + 1)}>{label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={String(stmtYear)} onValueChange={(v) => setStmtYear(Number(v))}>
+                        <SelectTrigger className="w-[90px] h-9 text-sm bg-secondary/40 border-border/40"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {STMT_YEARS.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-muted-foreground w-8">Von</span>
+                        <Select value={String(stmtFromMonth)} onValueChange={(v) => setStmtFromMonth(Number(v))}>
+                          <SelectTrigger className="w-[130px] h-9 text-sm bg-secondary/40 border-border/40"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {MONTH_LABELS_DE.map((label, i) => (
+                              <SelectItem key={i + 1} value={String(i + 1)}>{label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={String(stmtFromYear)} onValueChange={(v) => setStmtFromYear(Number(v))}>
+                          <SelectTrigger className="w-[90px] h-9 text-sm bg-secondary/40 border-border/40"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {STMT_YEARS.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-muted-foreground w-8">Bis</span>
+                        <Select value={String(stmtToMonth)} onValueChange={(v) => setStmtToMonth(Number(v))}>
+                          <SelectTrigger className="w-[130px] h-9 text-sm bg-secondary/40 border-border/40"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {MONTH_LABELS_DE.map((label, i) => (
+                              <SelectItem key={i + 1} value={String(i + 1)}>{label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={String(stmtToYear)} onValueChange={(v) => setStmtToYear(Number(v))}>
+                          <SelectTrigger className="w-[90px] h-9 text-sm bg-secondary/40 border-border/40"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {STMT_YEARS.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={stmtLoading || !selectedModelId}
+                    className="w-full h-9 border-accent/40 text-accent hover:bg-accent/10"
+                    onClick={async () => {
+                      if (!selectedModelId) return;
+                      const pad = (n: number) => String(n).padStart(2, "0");
+                      const body: Record<string, unknown> = { model_id: selectedModelId };
+                      if (stmtMode === "month") {
+                        body.month = stmtMonth;
+                        body.year = stmtYear;
+                      } else {
+                        const from = `${stmtFromYear}-${pad(stmtFromMonth)}`;
+                        const to = `${stmtToYear}-${pad(stmtToMonth)}`;
+                        if (from > to) {
+                          toast.error("Zeitraum ungültig — „Von“ liegt nach „Bis“");
+                          return;
+                        }
+                        body.from = from;
+                        body.to = to;
+                      }
+                      setStmtLoading(true);
+                      try {
+                        const { data, error } = await supabase.functions.invoke("fetch-payout-statements", { body });
+                        if (error) throw error;
+                        if ((data as any)?.error) throw new Error((data as any).error);
+                        const rows = ((data as any)?.statements ?? []) as PayoutStatement[];
+                        const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; message?: string }>;
+                        setStmtRows(rows);
+                        setStmtFetchedAt(new Date().toISOString());
+                        if (errs.length > 0) {
+                          toast.error(`${rows.length} Belege — ${errs.length} Fehler`, {
+                            description: errs.map((e) => `${e.platform ?? "?"}: ${e.message ?? "Unbekannter Fehler"}`).join("\n"),
+                            duration: 10000,
+                            style: { whiteSpace: "pre-line" },
+                          });
+                        } else if (rows.length === 0) {
+                          toast.info("Keine Auszahlungsbelege für diesen Zeitraum");
+                        } else {
+                          toast.success(`${rows.length} Auszahlungsbelege geladen ✅`);
+                        }
+                      } catch (err: any) {
+                        toast.error(err.message || "Belege konnten nicht abgerufen werden");
+                      } finally {
+                        setStmtLoading(false);
+                      }
+                    }}
+                  >
+                    {stmtLoading ? (
+                      <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Lädt…</>
+                    ) : (
+                      <><FileText className="h-3.5 w-3.5 mr-1.5" /> Belege abrufen</>
+                    )}
+                  </Button>
+
+                  {stmtRows && stmtRows.length > 0 && (
+                    <div className="space-y-1.5 pt-1 border-t border-accent/10">
+                      {stmtRows.map((s, i) => {
+                        const expired = s.expiresAt ? new Date(s.expiresAt).getTime() < Date.now() : false;
+                        const amount = typeof s.amount === "number"
+                          ? `${s.amount.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${s.currency || ""}`.trim()
+                          : "—";
+                        return (
+                          <div
+                            key={`${s.platform}-${s.id}-${i}`}
+                            className="rounded-lg border border-border/40 bg-background/40 p-2.5 flex items-center justify-between gap-2"
+                          >
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-accent/15 text-accent font-semibold">
+                                  {s.platform || "?"}
+                                </span>
+                                <span className="text-xs font-semibold text-foreground">{s.period || "—"}</span>
+                                {s.pending && (
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 font-semibold">
+                                    Ausstehend
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-muted-foreground truncate">
+                                {s.periodBegin && s.periodEnd
+                                  ? `${new Date(s.periodBegin).toLocaleDateString("de-DE")} – ${new Date(s.periodEnd).toLocaleDateString("de-DE")}`
+                                  : ""}
+                                {s.reference ? ` · Ref ${s.reference}` : ""}
+                                {s.id ? ` · #${s.id}` : ""}
+                              </p>
+                            </div>
+                            <div className="text-right shrink-0 space-y-1">
+                              <p className="text-sm font-bold tabular-nums text-foreground">{amount}</p>
+                              {s.unavailable ? (
+                                <p className="text-[10px] text-destructive max-w-[140px]">{s.unavailable}</p>
+                              ) : s.downloadUrl && !expired ? (
+                                <a
+                                  href={s.downloadUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  {...(s.inline ? {} : { download: "" })}
+                                  className="inline-flex items-center gap-1 text-[10px] text-accent hover:underline"
+                                >
+                                  <Download className="h-3 w-3" /> Herunterladen
+                                </a>
+                              ) : (
+                                <p className="text-[10px] text-muted-foreground">Link abgelaufen</p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {stmtFetchedAt && (
+                        <p className="text-[9px] text-muted-foreground/70 pt-1">
+                          Abgerufen {new Date(stmtFetchedAt).toLocaleTimeString("de-DE")} — Download-Links laufen nach kurzer Zeit ab, dann einfach erneut abrufen.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
 
                 {/* Gesamt Payouts — auto-summed from fetched per-platform values */}
                 {fetchedPayoutRevenue && (() => {

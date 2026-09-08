@@ -77,3 +77,5 @@ project_id = "acznyhzgbkdcmnbqvptt"
     verify_jwt = false
   [functions.verify-telegram-id]
     verify_jwt = false
+  [functions.fetch-payout-statements]
+    verify_jwt = false
