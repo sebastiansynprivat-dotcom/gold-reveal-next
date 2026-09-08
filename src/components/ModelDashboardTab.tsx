@@ -3449,7 +3449,8 @@ export default function ModelDashboardTab() {
                                   onClick={async () => {
                                     const url = s.downloadUrl!;
                                     const today = new Date();
-                                    const dl = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+                                    const p2 = (n: number) => String(n).padStart(2, "0");
+                                    const dl = `${today.getFullYear()}-${p2(today.getMonth() + 1)}-${p2(today.getDate())}`;
                                     const base = `${(s.platform || "statement").toLowerCase()}_${s.period || "unbekannt"}_${dl}`;
                                     try {
                                       const res = await fetch(url);
