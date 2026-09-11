@@ -3549,6 +3549,13 @@ export type Database = {
         }[]
       }
       get_credit_note_seq: { Args: never; Returns: number }
+      get_fourbased_revenue_by_model: {
+        Args: never
+        Returns: {
+          model_id: string
+          total: number
+        }[]
+      }
       get_free_account_counts: {
         Args: never
         Returns: {
