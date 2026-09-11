@@ -243,6 +243,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
       setAccountIds([]);
       setAccountSearch("");
       setLanguage("de");
+      setAgency("shex");
       setStartDate(new Date());
       load();
     } catch (e: any) {
