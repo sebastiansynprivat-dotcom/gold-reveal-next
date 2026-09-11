@@ -27,6 +27,7 @@ interface PreProfile {
   name: string | null;
   telegram_id: string | null;
   language: "de" | "en";
+  agency: "shex" | "syn";
   group_name: string;
   created_at: string;
   assignments: {
@@ -71,7 +72,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
     setLoading(true);
     const { data: profs, error } = await supabase
       .from("profiles")
-      .select("id, name, telegram_id, language, group_name, created_at, pre_create")
+      .select("id, name, telegram_id, language, group_name, created_at, pre_create, agency")
       .eq("pre_create", true)
       .order("created_at", { ascending: false });
     if (error) {
@@ -102,6 +103,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
         name: p.name,
         telegram_id: p.telegram_id,
         language: (p.language || "de") as "de" | "en",
+        agency: (p.agency || "shex") as "shex" | "syn",
         group_name: p.group_name || "",
         created_at: p.created_at,
         assignments: assignmentsByProfile[p.id] || [],
