@@ -25,7 +25,6 @@ type RevenueSnapshot = {
   maloum: string;
   brezzels: string;
   fourbased: string;
-  fansyme: string;
   salesToday: string;
   updated: string;
 };
@@ -56,7 +55,6 @@ function valueForKey(key: string, r: RevenueSnapshot): string {
   if (k.includes("maloum")) return r.maloum;
   if (k.includes("brezzels")) return r.brezzels;
   if (k.includes("4based") || k.includes("fourbased")) return r.fourbased;
-  if (k.includes("fansyme") || k.includes("fansy")) return r.fansyme;
   if (k.includes("sales")) return r.salesToday;
   if (k.includes("streak")) return "🔥";
   if (k.includes("updated") || k.includes("date") || k.includes("time")) return r.updated;
@@ -110,7 +108,6 @@ export async function buildRevenueSnapshot(): Promise<RevenueSnapshot> {
     maloum: fmtEur(byPlatform["maloum"] || 0),
     brezzels: fmtEur(byPlatform["brezzels"] || 0),
     fourbased: fmtEur(byPlatform["4based"] || 0),
-    fansyme: fmtEur(byPlatform["fansyme"] || 0),
     salesToday: String(todayCount),
     updated,
   };
@@ -132,7 +129,6 @@ export async function buildPassFieldVariants() {
         maloum: r.maloum,
         brezzels: r.brezzels,
         fourbased: r.fourbased,
-        fansyme: r.fansyme,
         sales_today: r.salesToday,
         streak: "🔥",
         updated: r.updated,

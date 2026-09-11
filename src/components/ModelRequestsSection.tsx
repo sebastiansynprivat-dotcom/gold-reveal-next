@@ -140,7 +140,6 @@ const PLATFORM_STYLES: Record<string, { bg: string; text: string; border: string
   fansly:    { bg: "bg-sky-500/15",     text: "text-sky-300",     border: "border-sky-500/40",     dot: "bg-sky-400"     },
   onlyfans:  { bg: "bg-cyan-500/15",    text: "text-cyan-300",    border: "border-cyan-500/40",    dot: "bg-cyan-400"    },
   fanvue:    { bg: "bg-emerald-500/15", text: "text-emerald-300", border: "border-emerald-500/40", dot: "bg-emerald-400" },
-  fansyme:   { bg: "bg-pink-500/15",    text: "text-pink-300",    border: "border-pink-500/40",    dot: "bg-pink-400"    },
 };
 
 function parsePlatform(description: string): { platform: string | null; cleaned: string } {
