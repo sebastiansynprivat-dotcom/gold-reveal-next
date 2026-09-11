@@ -1965,6 +1965,7 @@ export default function ModelDashboardTab() {
             const activeCount =
               (showDuplicatesOnly ? 1 : 0) +
               (only4BMissingPayout ? 1 : 0) +
+              (onlyPayoutMissing ? 1 : 0) +
               (agencyFilter !== "all" ? 1 : 0) +
               (steckbriefFilter !== "all" ? 1 : 0) +
               (sortMode !== "name" ? 1 : 0) +
