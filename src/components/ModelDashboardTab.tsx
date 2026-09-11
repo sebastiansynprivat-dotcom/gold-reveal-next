@@ -2059,6 +2059,32 @@ export default function ModelDashboardTab() {
                     <Wallet className="h-3.5 w-3.5" />
                     4Based-Auszahlung fehlt (&gt;$50)
                   </Button>
+                  <Button
+                    type="button"
+                    variant={onlyPayoutMissing ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setOnlyPayoutMissing((v) => !v)}
+                    className={cn(
+                      "h-8 gap-1.5 text-[11px]",
+                      onlyPayoutMissing
+                        ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
+                        : missingPayoutModelIds.size > 0
+                          ? "border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
+                          : "",
+                    )}
+                    title="Alle Models mit 4Based-Account, bei denen der Auszahlungs-Haken nicht grün ist (unabhängig vom Umsatz)"
+                  >
+                    <Wallet className="h-3.5 w-3.5" />
+                    Vorab-Auszahlung fehlt
+                    {missingPayoutModelIds.size > 0 && (
+                      <Badge
+                        variant="outline"
+                        className="ml-1 h-4 px-1.5 text-[10px] border-amber-500/40 text-amber-300 tabular-nums"
+                      >
+                        {missingPayoutModelIds.size}
+                      </Badge>
+                    )}
+                  </Button>
                 </div>
 
                 {/* Row 2: Agency + Steckbrief + Sort pills */}
