@@ -532,6 +532,9 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                         <Badge className="text-[9px] px-1.5 py-0 bg-accent/15 text-accent border-accent/20">
                           {pc.language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
                         </Badge>
+                        <Badge className="text-[9px] px-1.5 py-0 bg-secondary/60 text-foreground border-border/40">
+                          {pc.agency === "syn" ? "SYN" : "SheX"}
+                        </Badge>
                         <Badge className="text-[9px] px-1.5 py-0 bg-amber-500/15 text-amber-400 border-amber-500/30">
                           <Clock className="h-2.5 w-2.5 mr-0.5" /> wartet
                         </Badge>
