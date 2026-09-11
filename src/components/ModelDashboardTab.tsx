@@ -1204,35 +1204,45 @@ export default function ModelDashboardTab() {
 
 
 
-  // ─── Load all-time 4Based revenue (USD) per model for the "payout missing (>$50)" filter ───
-  // All-time: the highest 4Based revenue ever recorded in payout_revenue, regardless of month.
+  // ─── Load all-time 4Based revenue per model (sum of every ingested day) ───
+  // Source: accounts_data (complete daily ingest) instead of payout_revenue, which only
+  // holds the few months that were billed and therefore missed most models.
   useEffect(() => {
     if (!only4BMissingPayout) return;
     let cancelled = false;
     (async () => {
-      const ids = models.map((m) => m.id);
-      if (ids.length === 0) return;
-      // Chunk to keep URL sane
-      const chunkSize = 200;
+      const { data } = await (supabase as any).rpc("get_fourbased_revenue_by_model");
       const map: Record<string, number> = {};
-      for (let i = 0; i < ids.length; i += chunkSize) {
-        const chunk = ids.slice(i, i + chunkSize);
-        const { data } = await (supabase as any)
-          .from("payout_revenue")
-          .select("model_id, fourbased_revenue")
-          .in("model_id", chunk);
-        ((data as any[]) || []).forEach((r) => {
-          const v = Number(r.fourbased_revenue);
-          if (!Number.isFinite(v)) return;
-          map[r.model_id] = Math.max(map[r.model_id] || 0, v);
-        });
-      }
+      ((data as any[]) || []).forEach((r) => {
+        const v = Number(r.total);
+        if (Number.isFinite(v)) map[r.model_id] = v;
+      });
       if (!cancelled) setFbRevenueByModel(map);
     })();
     return () => { cancelled = true; };
-  }, [only4BMissingPayout, models]);
+  }, [only4BMissingPayout]);
 
+  // Models that own at least one 4Based platform account
+  const modelsWith4Based = useMemo(
+    () =>
+      new Set(
+        allAccountsIndex
+          .filter((a) => String(a.platform || "").toLowerCase() === "4based")
+          .map((a) => a.model_id),
+      ),
+    [allAccountsIndex],
+  );
 
+  // Models with a 4Based account where the payout checkbox is not green yet
+  const missingPayoutModelIds = useMemo(
+    () =>
+      new Set(
+        models
+          .filter((m) => modelsWith4Based.has(m.id) && !m.fourbased_payout_configured)
+          .map((m) => m.id),
+      ),
+    [models, modelsWith4Based],
+  );
 
   // ─── Filter + sort models ───
   const filteredModels = useMemo(() => {
@@ -1244,6 +1254,7 @@ export default function ModelDashboardTab() {
     if (only4BMissingPayout) {
       list = list.filter((m) => !m.fourbased_payout_configured && (fbRevenueByModel[m.id] || 0) > 50);
     }
+    if (onlyPayoutMissing) list = list.filter((m) => missingPayoutModelIds.has(m.id));
     if (steckbriefFilter === "filled") list = list.filter((m) => filledProfileIds.has(m.id));
     else if (steckbriefFilter === "empty") list = list.filter((m) => !filledProfileIds.has(m.id));
     else if (steckbriefFilter === "confirmed") list = list.filter((m) => profileStatusOf(m.id) === "confirmed");
