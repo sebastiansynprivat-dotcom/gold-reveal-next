@@ -59,6 +59,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
   const [groupName, setGroupName] = useState("");
   const [telegram, setTelegram] = useState("");
   const [language, setLanguage] = useState<"de" | "en">("de");
+  const [agency, setAgency] = useState<"shex" | "syn">("shex");
   const [accountIds, setAccountIds] = useState<string[]>([]);
   const [accountSearch, setAccountSearch] = useState("");
   const [startDate, setStartDate] = useState<Date>(new Date());
