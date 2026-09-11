@@ -370,10 +370,16 @@ export default function Dashboard() {
         : Promise.resolve({ data: [] as any[] }),
     ]);
 
+    // Nur Anfragen von Models, die aktuell zugewiesen sind. Wird ein Model
+    // abgegeben, verschwinden auch alte Anfragen dieses Models aus dem Dashboard.
+    const isCurrentModel = (r: any) => !r.model_id || myModelIds.includes(r.model_id);
+
     const data = [
-      ...(ownReqs || []).map((r: any) => ({ ...r, _inherited: false })),
-      ...(inheritedReqs || []).map((r: any) => ({ ...r, _inherited: true })),
+      ...(ownReqs || []).filter(isCurrentModel).map((r: any) => ({ ...r, _inherited: false })),
+      ...(inheritedReqs || []).filter(isCurrentModel).map((r: any) => ({ ...r, _inherited: true })),
     ].sort((a: any, b: any) => (a.created_at < b.created_at ? 1 : -1));
+
+    if (!data.length) setMyRequests([]);
 
     if (data) {
       const ids = data.map((r: any) => r.id);
