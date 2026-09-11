@@ -336,6 +336,7 @@ export default function ModelDashboardTab() {
   const [agencyBilling, setAgencyBilling] = useState<Record<string, boolean>>({ shex: false, syn: false });
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [only4BMissingPayout, setOnly4BMissingPayout] = useState(false);
+  const [onlyPayoutMissing, setOnlyPayoutMissing] = useState(false);
   const [fbRevenueByModel, setFbRevenueByModel] = useState<Record<string, number>>({});
 
   // Load global per-agency billing-in-progress flags
