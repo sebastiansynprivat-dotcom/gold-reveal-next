@@ -336,6 +336,7 @@ export default function ModelDashboardTab() {
   const [agencyBilling, setAgencyBilling] = useState<Record<string, boolean>>({ shex: false, syn: false });
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [only4BMissingPayout, setOnly4BMissingPayout] = useState(false);
+  const [onlyPayoutMissing, setOnlyPayoutMissing] = useState(false);
   const [fbRevenueByModel, setFbRevenueByModel] = useState<Record<string, number>>({});
 
   // Load global per-agency billing-in-progress flags
@@ -1204,35 +1205,45 @@ export default function ModelDashboardTab() {
 
 
 
-  // ─── Load all-time 4Based revenue (USD) per model for the "payout missing (>$50)" filter ───
-  // All-time: the highest 4Based revenue ever recorded in payout_revenue, regardless of month.
+  // ─── Load all-time 4Based revenue per model (sum of every ingested day) ───
+  // Source: accounts_data (complete daily ingest) instead of payout_revenue, which only
+  // holds the few months that were billed and therefore missed most models.
   useEffect(() => {
     if (!only4BMissingPayout) return;
     let cancelled = false;
     (async () => {
-      const ids = models.map((m) => m.id);
-      if (ids.length === 0) return;
-      // Chunk to keep URL sane
-      const chunkSize = 200;
+      const { data } = await (supabase as any).rpc("get_fourbased_revenue_by_model");
       const map: Record<string, number> = {};
-      for (let i = 0; i < ids.length; i += chunkSize) {
-        const chunk = ids.slice(i, i + chunkSize);
-        const { data } = await (supabase as any)
-          .from("payout_revenue")
-          .select("model_id, fourbased_revenue")
-          .in("model_id", chunk);
-        ((data as any[]) || []).forEach((r) => {
-          const v = Number(r.fourbased_revenue);
-          if (!Number.isFinite(v)) return;
-          map[r.model_id] = Math.max(map[r.model_id] || 0, v);
-        });
-      }
+      ((data as any[]) || []).forEach((r) => {
+        const v = Number(r.total);
+        if (Number.isFinite(v)) map[r.model_id] = v;
+      });
       if (!cancelled) setFbRevenueByModel(map);
     })();
     return () => { cancelled = true; };
-  }, [only4BMissingPayout, models]);
+  }, [only4BMissingPayout]);
 
+  // Models that own at least one 4Based platform account
+  const modelsWith4Based = useMemo(
+    () =>
+      new Set(
+        allAccountsIndex
+          .filter((a) => String(a.platform || "").toLowerCase() === "4based")
+          .map((a) => a.model_id),
+      ),
+    [allAccountsIndex],
+  );
 
+  // Models with a 4Based account where the payout checkbox is not green yet
+  const missingPayoutModelIds = useMemo(
+    () =>
+      new Set(
+        models
+          .filter((m) => modelsWith4Based.has(m.id) && !m.fourbased_payout_configured)
+          .map((m) => m.id),
+      ),
+    [models, modelsWith4Based],
+  );
 
   // ─── Filter + sort models ───
   const filteredModels = useMemo(() => {
@@ -1244,6 +1255,7 @@ export default function ModelDashboardTab() {
     if (only4BMissingPayout) {
       list = list.filter((m) => !m.fourbased_payout_configured && (fbRevenueByModel[m.id] || 0) > 50);
     }
+    if (onlyPayoutMissing) list = list.filter((m) => missingPayoutModelIds.has(m.id));
     if (steckbriefFilter === "filled") list = list.filter((m) => filledProfileIds.has(m.id));
     else if (steckbriefFilter === "empty") list = list.filter((m) => !filledProfileIds.has(m.id));
     else if (steckbriefFilter === "confirmed") list = list.filter((m) => profileStatusOf(m.id) === "confirmed");
@@ -1266,11 +1278,11 @@ export default function ModelDashboardTab() {
       list = [...list].sort((a, b) => ts(b.id) - ts(a.id));
     }
     return list;
-  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter, steckbriefFilter, filledProfileIds, profileMeta, sortMode, only4BMissingPayout, fbRevenueByModel]);
+  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter, steckbriefFilter, filledProfileIds, profileMeta, sortMode, only4BMissingPayout, fbRevenueByModel, onlyPayoutMissing, missingPayoutModelIds]);
 
   const MODEL_PAGE_SIZE = 20;
   const [modelPage, setModelPage] = useState(1);
-  useEffect(() => { setModelPage(1); }, [searchQuery, showDuplicatesOnly, agencyFilter, steckbriefFilter, sortMode, only4BMissingPayout]);
+  useEffect(() => { setModelPage(1); }, [searchQuery, showDuplicatesOnly, agencyFilter, steckbriefFilter, sortMode, only4BMissingPayout, onlyPayoutMissing]);
   const modelTotalPages = Math.max(1, Math.ceil(filteredModels.length / MODEL_PAGE_SIZE));
   const pagedModels = useMemo(
     () => filteredModels.slice((modelPage - 1) * MODEL_PAGE_SIZE, modelPage * MODEL_PAGE_SIZE),
@@ -1953,6 +1965,7 @@ export default function ModelDashboardTab() {
             const activeCount =
               (showDuplicatesOnly ? 1 : 0) +
               (only4BMissingPayout ? 1 : 0) +
+              (onlyPayoutMissing ? 1 : 0) +
               (agencyFilter !== "all" ? 1 : 0) +
               (steckbriefFilter !== "all" ? 1 : 0) +
               (sortMode !== "name" ? 1 : 0) +
@@ -2045,6 +2058,32 @@ export default function ModelDashboardTab() {
                   >
                     <Wallet className="h-3.5 w-3.5" />
                     4Based-Auszahlung fehlt (&gt;$50)
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={onlyPayoutMissing ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setOnlyPayoutMissing((v) => !v)}
+                    className={cn(
+                      "h-8 gap-1.5 text-[11px]",
+                      onlyPayoutMissing
+                        ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
+                        : missingPayoutModelIds.size > 0
+                          ? "border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
+                          : "",
+                    )}
+                    title="Alle Models mit 4Based-Account, bei denen der Auszahlungs-Haken nicht grün ist (unabhängig vom Umsatz)"
+                  >
+                    <Wallet className="h-3.5 w-3.5" />
+                    Vorab-Auszahlung fehlt
+                    {missingPayoutModelIds.size > 0 && (
+                      <Badge
+                        variant="outline"
+                        className="ml-1 h-4 px-1.5 text-[10px] border-amber-500/40 text-amber-300 tabular-nums"
+                      >
+                        {missingPayoutModelIds.size}
+                      </Badge>
+                    )}
                   </Button>
                 </div>
 
