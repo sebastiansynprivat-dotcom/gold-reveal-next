@@ -1556,7 +1556,6 @@ export default function AdminDashboard() {
     brezzels: number;
     "4based": number;
     admireme: number;
-    // fansyme: number;
   }
 
   interface DailyTotal {
@@ -1569,7 +1568,6 @@ export default function AdminDashboard() {
     "4based": DailyTotal[];
     brezzels: DailyTotal[];
     admireme: DailyTotal[];
-    // fansyme: DailyTotal[];
   }
 
   type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
