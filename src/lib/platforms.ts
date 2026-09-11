@@ -48,7 +48,6 @@ const DEFAULT_SEED: PlatformDef[] = [
   { label: "Brezzels", key: "brezzels", color: "#3b82f6", isActive: true, autoSynced: true, sortOrder: 20, styles: styleForIndex(1) },
   { label: "4Based",   key: "4based",   color: "#22d3ee", isActive: true, autoSynced: true, sortOrder: 30, styles: styleForIndex(2) },
   { label: "Admireme", key: "admireme", color: "#ec4899", isActive: true, autoSynced: true, sortOrder: 40, styles: styleForIndex(3) },
-  { label: "VisitX",   key: "visitx",   color: "#0ea5e9", isActive: true, autoSynced: true, sortOrder: 50, styles: styleForIndex(4) },
   { label: "Slushy",   key: "slushy",   color: "#8b5cf6", isActive: true, autoSynced: true, sortOrder: 60, styles: styleForIndex(5) },
 ];
 

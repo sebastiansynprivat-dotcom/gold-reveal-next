@@ -15,7 +15,6 @@ const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Quiz = lazy(() => import("./pages/Quiz"));
 const OfferA = lazy(() => import("./pages/OfferA"));
 const OfferB = lazy(() => import("./pages/OfferB"));
-const OfferC = lazy(() => import("./pages/OfferC"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AdminNotifications = lazy(() => import("./pages/AdminNotifications"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -248,7 +247,6 @@ const App = () => (
               <Route path="/quiz" element={<Quiz />} />
               <Route path="/offer-a" element={<OfferA />} />
               <Route path="/offer-b" element={<OfferB />} />
-              <Route path="/offer-c" element={<OfferC />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

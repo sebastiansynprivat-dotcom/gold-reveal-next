@@ -237,7 +237,6 @@ const PLATFORM_DOMAINS: Record<string, string> = {
   Brezzels: "brezzels.com",
   
   Admireme: "admireme.com",
-  VisitX: "visit-x.net",
   Slushy: "slushy.com",
 };
 
@@ -314,7 +313,6 @@ const platformColors: Record<string, string> = {
   Brezzels: "bg-orange-500/15 text-orange-400 border-orange-500/30",
   
   Admireme: "bg-pink-500/15 text-pink-400 border-pink-500/30",
-  VisitX: "bg-sky-500/15 text-sky-400 border-sky-500/30",
   Slushy: "bg-violet-500/15 text-violet-400 border-violet-500/30",
 };
 
@@ -2776,7 +2774,6 @@ export default function ModelDashboardTab() {
                         Brezzels: "#3b82f6",
                         
                         Admireme: "#ec4899",
-                        VisitX: "#0ea5e9",
                         Slushy: "#8b5cf6",
                       };
                       // Map platform to the correct revenue field

@@ -162,7 +162,6 @@ const PLATFORM_LABELS: Record<string, string> = {
   fourbased: "4Based",
   maloum: "Maloum",
   brezzels: "Brezzels",
-  fansy: "FansyMe",
 };
 
 function periodRange(p: Period): { from: string; to: string } | null {
