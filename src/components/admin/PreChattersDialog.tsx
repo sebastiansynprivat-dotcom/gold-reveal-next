@@ -27,6 +27,7 @@ interface PreProfile {
   name: string | null;
   telegram_id: string | null;
   language: "de" | "en";
+  agency: "shex" | "syn";
   group_name: string;
   created_at: string;
   assignments: {
@@ -59,6 +60,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
   const [groupName, setGroupName] = useState("");
   const [telegram, setTelegram] = useState("");
   const [language, setLanguage] = useState<"de" | "en">("de");
+  const [agency, setAgency] = useState<"shex" | "syn">("shex");
   const [accountIds, setAccountIds] = useState<string[]>([]);
   const [accountSearch, setAccountSearch] = useState("");
   const [startDate, setStartDate] = useState<Date>(new Date());
@@ -70,7 +72,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
     setLoading(true);
     const { data: profs, error } = await supabase
       .from("profiles")
-      .select("id, name, telegram_id, language, group_name, created_at, pre_create")
+      .select("id, name, telegram_id, language, group_name, created_at, pre_create, agency")
       .eq("pre_create", true)
       .order("created_at", { ascending: false });
     if (error) {
@@ -101,6 +103,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
         name: p.name,
         telegram_id: p.telegram_id,
         language: (p.language || "de") as "de" | "en",
+        agency: (p.agency || "shex") as "shex" | "syn",
         group_name: p.group_name || "",
         created_at: p.created_at,
         assignments: assignmentsByProfile[p.id] || [],
@@ -214,6 +217,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
           group_name: groupName.trim() || "",
           telegram_id: telegram.trim(),
           language,
+          agency,
         } as any)
         .select("id")
         .single();
@@ -241,6 +245,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
       setAccountIds([]);
       setAccountSearch("");
       setLanguage("de");
+      setAgency("shex");
       setStartDate(new Date());
       load();
     } catch (e: any) {
@@ -327,6 +332,29 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                       )}
                     >
                       {lang === "de" ? "🇩🇪 DE" : "🇬🇧 EN"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Agentur</label>
+                <div className="flex gap-1.5">
+                  {([
+                    { key: "shex", label: "SheX" },
+                    { key: "syn", label: "SYN" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setAgency(opt.key)}
+                      className={cn(
+                        "flex-1 h-8 rounded-md text-xs font-medium transition-all border",
+                        agency === opt.key
+                          ? "bg-accent text-accent-foreground border-accent"
+                          : "bg-secondary/30 text-muted-foreground border-transparent hover:text-foreground",
+                      )}
+                    >
+                      {opt.label}
                     </button>
                   ))}
                 </div>
@@ -503,6 +531,9 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                       <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                         <Badge className="text-[9px] px-1.5 py-0 bg-accent/15 text-accent border-accent/20">
                           {pc.language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
+                        </Badge>
+                        <Badge className="text-[9px] px-1.5 py-0 bg-secondary/60 text-foreground border-border/40">
+                          {pc.agency === "syn" ? "SYN" : "SheX"}
                         </Badge>
                         <Badge className="text-[9px] px-1.5 py-0 bg-amber-500/15 text-amber-400 border-amber-500/30">
                           <Clock className="h-2.5 w-2.5 mr-0.5" /> wartet
