@@ -335,6 +335,29 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                 </div>
               </div>
               <div className="space-y-1">
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Agentur</label>
+                <div className="flex gap-1.5">
+                  {([
+                    { key: "shex", label: "SheX" },
+                    { key: "syn", label: "SYN" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setAgency(opt.key)}
+                      className={cn(
+                        "flex-1 h-8 rounded-md text-xs font-medium transition-all border",
+                        agency === opt.key
+                          ? "bg-accent text-accent-foreground border-accent"
+                          : "bg-secondary/30 text-muted-foreground border-transparent hover:text-foreground",
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-1">
                 <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Startdatum</label>
                 <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
                   <PopoverTrigger asChild>
