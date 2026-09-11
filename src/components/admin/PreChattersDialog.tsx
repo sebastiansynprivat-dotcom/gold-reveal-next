@@ -215,6 +215,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
           group_name: groupName.trim() || "",
           telegram_id: telegram.trim(),
           language,
+          agency,
         } as any)
         .select("id")
         .single();
