@@ -1278,11 +1278,11 @@ export default function ModelDashboardTab() {
       list = [...list].sort((a, b) => ts(b.id) - ts(a.id));
     }
     return list;
-  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter, steckbriefFilter, filledProfileIds, profileMeta, sortMode, only4BMissingPayout, fbRevenueByModel]);
+  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter, steckbriefFilter, filledProfileIds, profileMeta, sortMode, only4BMissingPayout, fbRevenueByModel, onlyPayoutMissing, missingPayoutModelIds]);
 
   const MODEL_PAGE_SIZE = 20;
   const [modelPage, setModelPage] = useState(1);
-  useEffect(() => { setModelPage(1); }, [searchQuery, showDuplicatesOnly, agencyFilter, steckbriefFilter, sortMode, only4BMissingPayout]);
+  useEffect(() => { setModelPage(1); }, [searchQuery, showDuplicatesOnly, agencyFilter, steckbriefFilter, sortMode, only4BMissingPayout, onlyPayoutMissing]);
   const modelTotalPages = Math.max(1, Math.ceil(filteredModels.length / MODEL_PAGE_SIZE));
   const pagedModels = useMemo(
     () => filteredModels.slice((modelPage - 1) * MODEL_PAGE_SIZE, modelPage * MODEL_PAGE_SIZE),
