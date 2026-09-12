@@ -9313,36 +9313,37 @@ export default function AdminDashboard() {
                                       {acc.platform}
                                     </span>
                                   </div>
-                                  {/* Bot DM — only Maloum (Brezzels & 4Based haben keinen Bot) */}
-                                  {s.hasBot ? (
-                                    <CellCheck
-                                      done={s.botdmDone}
-                                      onToggle={() => toggleSetupField(acc.id, s.botdmF, s.botdmDone)}
-                                    />
-                                  ) : (
-                                    <div className="flex justify-center py-2">
-                                      <span className="text-[10px] text-muted-foreground/40">—</span>
-                                    </div>
-                                  )}
-                                  {/* Account Setup */}
-                                  <CellCheck
-                                    done={s.accountSetupDone}
-                                    onToggle={() => toggleSetupField(acc.id, s.welcomeF, s.accountSetupDone)}
-                                  />
-                                  {/* Welcome-Nachricht (auto-derived from Mass DM) */}
-                                  <CellCheck
-                                    done={s.welcomeDone}
-                                    auto={s.welcomeAuto}
-                                    onToggle={() => toggleSetupField(acc.id, s.massdmF, !!(dash as any)?.[s.massdmF])}
-                                  />
-                                  {/* Feed Posting Folder (derived) */}
-                                  <CellCheck done={s.feedFolderDone} auto={s.feedFolderDone} disabled />
-                                  {/* Feed Bot Post (derived from acc.post) */}
-                                  <CellCheck
-                                    done={s.feedBotDone}
-                                    auto={s.feedBotDone}
-                                    onToggle={() => updateAccountField(acc.id, { post: !acc.post })}
-                                  />
+                                   {/* Bot DM — Indikator (nicht klickbar): gold = Hauptnachricht gesetzt, grün = Bot aktiv */}
+                                   <CellCheck
+                                     done={s.botdmState !== "none"}
+                                     tone={s.botdmState === "done" ? "emerald" : "gold"}
+                                     title={
+                                       s.botdmState === "done"
+                                         ? "Bot aktiv (Nachrichten-Switch ON)"
+                                         : s.botdmState === "partial"
+                                           ? "Hauptnachricht gesetzt, Bot noch nicht aktiv"
+                                           : "Keine Hauptnachricht gesetzt"
+                                     }
+                                   />
+                                   {/* Account Setup */}
+                                   <CellCheck
+                                     done={s.accountSetupDone}
+                                     onToggle={() => toggleSetupField(acc.id, s.welcomeF, s.accountSetupDone)}
+                                   />
+                                   {/* Welcome — manueller Haken pro Account */}
+                                   <CellCheck
+                                     done={s.welcomeDone}
+                                     title="Manuell setzen"
+                                     onToggle={() => updateAccountField(acc.id, { welcome_done: !s.welcomeDone } as any)}
+                                   />
+                                   {/* Feed Posting Folder (derived) */}
+                                   <CellCheck done={s.feedFolderDone} tone="emerald" title="Automatisch erkannt" />
+                                   {/* Feed Post — Indikator (nicht klickbar) */}
+                                   <CellCheck
+                                     done={s.feedBotDone}
+                                     tone="emerald"
+                                     title={s.feedBotDone ? "Feed-Posting aktiv" : "Feed-Posting aus"}
+                                   />
                                 </div>
 
 
