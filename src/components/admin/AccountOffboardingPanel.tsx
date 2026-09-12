@@ -245,7 +245,16 @@ const AccountOffboardingPanel = ({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={de} />
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={setDate}
+                  initialFocus
+                  locale={de}
+                  disabled={(d) => d < minDate}
+                  fromDate={minDate}
+                  className="p-3 pointer-events-auto"
+                />
               </PopoverContent>
             </Popover>
           </div>
