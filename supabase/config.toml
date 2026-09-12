@@ -79,3 +79,5 @@ project_id = "acznyhzgbkdcmnbqvptt"
     verify_jwt = false
   [functions.fetch-payout-statements]
     verify_jwt = false
+  [functions.process-offboardings]
+    verify_jwt = false
