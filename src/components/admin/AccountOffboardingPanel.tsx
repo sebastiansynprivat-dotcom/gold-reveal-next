@@ -102,6 +102,8 @@ const AccountOffboardingPanel = ({
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [downloading, setDownloading] = useState<string | null>(null);
 
+  const minDate = useMemo(() => tomorrowStart(), []);
+
   const activeAccounts = useMemo(() => accounts.filter((a) => !a.archived), [accounts]);
 
   const load = useCallback(async () => {
