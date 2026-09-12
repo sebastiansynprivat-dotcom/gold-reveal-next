@@ -219,11 +219,11 @@ const AccountOffboardingPanel = ({
       </p>
 
       {selectable.length > 0 && (
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="flex-1 space-y-1">
+        <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_150px_auto] gap-2 sm:items-end">
+          <div className="space-y-1 min-w-0">
             <Label className="text-[10px] text-muted-foreground">Plattform-Account</Label>
             <Select value={accountId} onValueChange={setAccountId}>
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger className="h-8 w-full text-xs">
                 <SelectValue placeholder="Account wählen" />
               </SelectTrigger>
               <SelectContent>
@@ -235,12 +235,12 @@ const AccountOffboardingPanel = ({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1 min-w-0">
             <Label className="text-[10px] text-muted-foreground">Stichtag</Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 w-full sm:w-[150px] justify-start text-xs gap-1.5">
-                  <CalendarIcon className="h-3 w-3" />
+                <Button variant="outline" size="sm" className="h-8 w-full justify-start text-xs gap-1.5">
+                  <CalendarIcon className="h-3 w-3 shrink-0" />
                   {date ? formatDate(date, "dd.MM.yyyy", { locale: de }) : "Datum"}
                 </Button>
               </PopoverTrigger>
@@ -249,17 +249,15 @@ const AccountOffboardingPanel = ({
               </PopoverContent>
             </Popover>
           </div>
-          <div className="space-y-1 flex flex-col justify-end">
-            <Button
-              size="sm"
-              onClick={create}
-              disabled={saving || !accountId || !date}
-              className="h-8 text-xs gap-1.5"
-            >
-              {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <LogOut className="h-3 w-3" />}
-              Offboarding planen
-            </Button>
-          </div>
+          <Button
+            size="sm"
+            onClick={create}
+            disabled={saving || !accountId || !date}
+            className="h-8 w-full sm:w-auto text-xs gap-1.5 whitespace-nowrap"
+          >
+            {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <LogOut className="h-3 w-3" />}
+            Offboarding planen
+          </Button>
         </div>
       )}
 
