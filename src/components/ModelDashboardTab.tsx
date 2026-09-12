@@ -684,6 +684,7 @@ export default function ModelDashboardTab() {
   }, [customPlatforms, selectedModelId]);
 
   const detailRef = useRef<HTMLDivElement>(null);
+  const platformAccountsRef = useRef<HTMLDivElement>(null);
 
   // ─── Load models ───
   const loadModels = useCallback(async () => {
