@@ -9523,11 +9523,23 @@ export default function AdminDashboard() {
                                         <div className="flex items-center gap-2">
                                           <Switch
                                             checked={!!acc.message}
-                                            onCheckedChange={(v) => updateAccountField(acc.id, { message: v })}
+                                            disabled={!acc.main_message?.trim()}
+                                            onCheckedChange={(v) => {
+                                              if (!acc.main_message?.trim()) {
+                                                toast.error("Erst Hauptnachricht speichern");
+                                                return;
+                                              }
+                                              updateAccountField(acc.id, { message: v });
+                                            }}
                                           />
                                           <span className={`text-[11px] font-semibold ${acc.message ? "text-emerald-400" : "text-muted-foreground"}`}>
                                             {acc.message ? "ON" : "OFF"}
                                           </span>
+                                          {!acc.main_message?.trim() && (
+                                            <span className="text-[10px] text-muted-foreground/70">
+                                              Hauptnachricht fehlt
+                                            </span>
+                                          )}
                                         </div>
 
                                         <div className="flex items-center gap-2">
