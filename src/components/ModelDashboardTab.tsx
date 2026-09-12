@@ -1933,7 +1933,10 @@ export default function ModelDashboardTab() {
           <OffboardingOverviewButton
             onSelectModel={(id) => {
               setSelectedModelId(id);
-              setTimeout(() => detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+              setTimeout(() => {
+                const target = platformAccountsRef.current || detailRef.current;
+                target?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }, 400);
             }}
           />
           <Button
