@@ -38,6 +38,13 @@ interface StatementFile {
   amount: number | null;
 }
 
+const tomorrowStart = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 1);
+  return d;
+};
+
 const toYmd = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
@@ -95,6 +102,8 @@ const AccountOffboardingPanel = ({
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [downloading, setDownloading] = useState<string | null>(null);
 
+  const minDate = useMemo(() => tomorrowStart(), []);
+
   const activeAccounts = useMemo(() => accounts.filter((a) => !a.archived), [accounts]);
 
   const load = useCallback(async () => {
@@ -141,6 +150,10 @@ const AccountOffboardingPanel = ({
   const create = async () => {
     if (!accountId || !date) {
       toast.error("Account und Datum auswählen");
+      return;
+    }
+    if (date < minDate) {
+      toast.error("Stichtag muss mindestens morgen sein");
       return;
     }
     setSaving(true);
@@ -245,7 +258,16 @@ const AccountOffboardingPanel = ({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus locale={de} />
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={setDate}
+                  initialFocus
+                  locale={de}
+                  disabled={(d) => d < minDate}
+                  fromDate={minDate}
+                  className="p-3 pointer-events-auto"
+                />
               </PopoverContent>
             </Popover>
           </div>
