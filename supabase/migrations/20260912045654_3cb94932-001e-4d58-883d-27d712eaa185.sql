@@ -1,0 +1,1 @@
+ALTER TABLE public.accounts ADD COLUMN IF NOT EXISTS welcome_done boolean NOT NULL DEFAULT false;
