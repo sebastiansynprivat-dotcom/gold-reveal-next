@@ -9173,20 +9173,23 @@ export default function AdminDashboard() {
                         const welcomeF = getField(acc.platform, "welcome");
                         const massdmF = getField(acc.platform, "massdm");
                         const hasBot = acc.platform === "Maloum";
-                        const botdmDone = hasBot ? !!(d as any)?.[botdmF] : true;
                         const accountSetupDone = !!(d as any)?.[welcomeF];
-                        // Welcome auto-complete: messaging on + main + follow + media set
-                        const welcomeAuto =
-                          !!acc.message &&
-                          !!(acc.main_message?.trim()) &&
-                          !!(acc.follow_message?.trim()) &&
-                          !!(acc.media_id?.trim());
-                        const welcomeDone = welcomeAuto || !!(d as any)?.[massdmF];
+                        // Bot DM (per account, indicator only):
+                        // none = no main message, partial = main message set, done = message switch ON
+                        const hasMain = !!(acc.main_message?.trim());
+                        const botdmState: "none" | "partial" | "done" = acc.message && hasMain
+                          ? "done"
+                          : hasMain
+                            ? "partial"
+                            : "none";
+                        const botdmDone = botdmState === "done";
+                        // Welcome: manual per-account flag
+                        const welcomeDone = !!(acc as any).welcome_done;
                         // Feed Posting Folder: drive_folder_id or folder_name set
                         const feedFolderDone = !!(acc.drive_folder_id?.trim() || acc.folder_name?.trim());
                         // Feed Bot Post: acc.post toggled on
                         const feedBotDone = !!acc.post;
-                        return { hasBot, botdmDone, accountSetupDone, welcomeDone, welcomeAuto, feedFolderDone, feedBotDone, botdmF, welcomeF, massdmF };
+                        return { hasBot, botdmState, botdmDone, accountSetupDone, welcomeDone, feedFolderDone, feedBotDone, botdmF, welcomeF, massdmF };
                       };
 
                       // Apply status filter
