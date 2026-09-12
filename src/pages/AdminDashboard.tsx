@@ -265,6 +265,7 @@ interface AccountEntry {
   main_message?: string;
   follow_message?: string;
   media_id?: string;
+  welcome_done?: boolean;
 }
 
 const PLATFORM_STYLES = PLATFORM_STYLES_GLOBAL;
