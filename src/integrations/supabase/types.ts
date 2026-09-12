@@ -58,6 +58,51 @@ export type Database = {
           },
         ]
       }
+      account_offboardings: {
+        Row: {
+          account_id: string
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          last_error: string | null
+          last_run_at: string | null
+          model_id: string | null
+          platform: string | null
+          status: string
+          target_date: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          model_id?: string | null
+          platform?: string | null
+          status?: string
+          target_date: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_error?: string | null
+          last_run_at?: string | null
+          model_id?: string | null
+          platform?: string | null
+          status?: string
+          target_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       accounts: {
         Row: {
           account_domain: string
@@ -2748,6 +2793,53 @@ export type Database = {
           title?: string
         }
         Relationships: []
+      }
+      offboarding_statement_files: {
+        Row: {
+          account_id: string
+          amount: number | null
+          created_at: string
+          currency: string | null
+          id: string
+          offboarding_id: string | null
+          pending: boolean
+          period: string
+          platform: string | null
+          storage_path: string
+        }
+        Insert: {
+          account_id: string
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          offboarding_id?: string | null
+          pending?: boolean
+          period: string
+          platform?: string | null
+          storage_path: string
+        }
+        Update: {
+          account_id?: string
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          offboarding_id?: string | null
+          pending?: boolean
+          period?: string
+          platform?: string | null
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offboarding_statement_files_offboarding_id_fkey"
+            columns: ["offboarding_id"]
+            isOneToOne: false
+            referencedRelation: "account_offboardings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payout_revenue: {
         Row: {
