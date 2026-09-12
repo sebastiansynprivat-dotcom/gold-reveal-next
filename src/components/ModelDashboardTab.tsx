@@ -4551,6 +4551,7 @@ export default function ModelDashboardTab() {
                 )}
               </div>
             </Section>
+            </div>
 
             {/* ── Auszahlung ── */}
             <Section icon={Wallet} title="Auszahlung" delay={0.2}>
