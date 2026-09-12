@@ -265,6 +265,7 @@ interface AccountEntry {
   main_message?: string;
   follow_message?: string;
   media_id?: string;
+  welcome_done?: boolean;
 }
 
 const PLATFORM_STYLES = PLATFORM_STYLES_GLOBAL;
@@ -9172,27 +9173,30 @@ export default function AdminDashboard() {
                         const welcomeF = getField(acc.platform, "welcome");
                         const massdmF = getField(acc.platform, "massdm");
                         const hasBot = acc.platform === "Maloum";
-                        const botdmDone = hasBot ? !!(d as any)?.[botdmF] : true;
                         const accountSetupDone = !!(d as any)?.[welcomeF];
-                        // Welcome auto-complete: messaging on + main + follow + media set
-                        const welcomeAuto =
-                          !!acc.message &&
-                          !!(acc.main_message?.trim()) &&
-                          !!(acc.follow_message?.trim()) &&
-                          !!(acc.media_id?.trim());
-                        const welcomeDone = welcomeAuto || !!(d as any)?.[massdmF];
+                        // Bot DM (per account, indicator only):
+                        // none = no main message, partial = main message set, done = message switch ON
+                        const hasMain = !!(acc.main_message?.trim());
+                        const botdmState: "none" | "partial" | "done" = acc.message && hasMain
+                          ? "done"
+                          : hasMain
+                            ? "partial"
+                            : "none";
+                        const botdmDone = botdmState === "done";
+                        // Welcome: manual per-account flag
+                        const welcomeDone = !!(acc as any).welcome_done;
                         // Feed Posting Folder: drive_folder_id or folder_name set
                         const feedFolderDone = !!(acc.drive_folder_id?.trim() || acc.folder_name?.trim());
                         // Feed Bot Post: acc.post toggled on
                         const feedBotDone = !!acc.post;
-                        return { hasBot, botdmDone, accountSetupDone, welcomeDone, welcomeAuto, feedFolderDone, feedBotDone, botdmF, welcomeF, massdmF };
+                        return { hasBot, botdmState, botdmDone, accountSetupDone, welcomeDone, feedFolderDone, feedBotDone, botdmF, welcomeF, massdmF };
                       };
 
                       // Apply status filter
                       if (setupStatusFilter !== "alle") {
                         filteredSetupAccounts = filteredSetupAccounts.filter((acc) => {
                           const s = computeStates(acc);
-                          if (setupStatusFilter === "botdm_missing") return s.hasBot && !s.botdmDone;
+                          if (setupStatusFilter === "botdm_missing") return !s.botdmDone;
                           if (setupStatusFilter === "setup_missing") return !s.accountSetupDone;
                           if (setupStatusFilter === "welcome_missing") return !s.welcomeDone;
                           if (setupStatusFilter === "feedfolder_missing") return !s.feedFolderDone;
@@ -9221,43 +9225,51 @@ export default function AdminDashboard() {
                             const s = computeStates(acc);
                             const isExpanded = expandedBot === acc.id;
 
-                            const CellCheck = ({
-                              done,
-                              auto,
-                              onToggle,
-                              disabled,
-                            }: {
-                              done: boolean;
-                              auto?: boolean;
-                              onToggle?: () => void;
-                              disabled?: boolean;
-                            }) => (
-                              <div
-                                className="flex justify-center py-2"
-                                onClick={(e) => e.stopPropagation()}
-                                title={auto ? "Automatisch erkannt" : undefined}
-                              >
-                                <button
-                                  onClick={() => !disabled && onToggle?.()}
-                                  disabled={disabled}
-                                  className={cn(
-                                    "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                    disabled && "opacity-30 cursor-not-allowed",
-                                    done
-                                      ? auto
-                                        ? "border-emerald-400 bg-emerald-400/20"
-                                        : "border-accent bg-accent/20"
-                                      : "border-muted-foreground/30 bg-transparent hover:border-accent/50",
-                                  )}
-                                >
-                                  {done && (
-                                    <CheckCircle2
-                                      className={cn("h-3 w-3", auto ? "text-emerald-400" : "text-accent")}
-                                    />
-                                  )}
-                                </button>
-                              </div>
-                            );
+                             const CellCheck = ({
+                               done,
+                               tone = "gold",
+                               onToggle,
+                               disabled,
+                               title,
+                             }: {
+                               done: boolean;
+                               tone?: "gold" | "emerald";
+                               onToggle?: () => void;
+                               disabled?: boolean;
+                               title?: string;
+                             }) => {
+                               const readOnly = disabled || !onToggle;
+                               return (
+                                 <div
+                                   className="flex justify-center py-2"
+                                   onClick={(e) => e.stopPropagation()}
+                                   title={title}
+                                 >
+                                   <button
+                                     onClick={() => !readOnly && onToggle?.()}
+                                     disabled={readOnly}
+                                     className={cn(
+                                       "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                                       readOnly && "cursor-default",
+                                       done
+                                         ? tone === "emerald"
+                                           ? "border-emerald-400 bg-emerald-400/20"
+                                           : "border-accent bg-accent/20"
+                                         : cn(
+                                             "border-muted-foreground/30 bg-transparent",
+                                             !readOnly && "hover:border-accent/50",
+                                           ),
+                                     )}
+                                   >
+                                     {done && (
+                                       <CheckCircle2
+                                         className={cn("h-3 w-3", tone === "emerald" ? "text-emerald-400" : "text-accent")}
+                                       />
+                                     )}
+                                   </button>
+                                 </div>
+                               );
+                             };
 
                             return (
                               <div key={acc.id} id={`setup-row-${acc.id}`}>
@@ -9301,36 +9313,37 @@ export default function AdminDashboard() {
                                       {acc.platform}
                                     </span>
                                   </div>
-                                  {/* Bot DM — only Maloum (Brezzels & 4Based haben keinen Bot) */}
-                                  {s.hasBot ? (
-                                    <CellCheck
-                                      done={s.botdmDone}
-                                      onToggle={() => toggleSetupField(acc.id, s.botdmF, s.botdmDone)}
-                                    />
-                                  ) : (
-                                    <div className="flex justify-center py-2">
-                                      <span className="text-[10px] text-muted-foreground/40">—</span>
-                                    </div>
-                                  )}
-                                  {/* Account Setup */}
-                                  <CellCheck
-                                    done={s.accountSetupDone}
-                                    onToggle={() => toggleSetupField(acc.id, s.welcomeF, s.accountSetupDone)}
-                                  />
-                                  {/* Welcome-Nachricht (auto-derived from Mass DM) */}
-                                  <CellCheck
-                                    done={s.welcomeDone}
-                                    auto={s.welcomeAuto}
-                                    onToggle={() => toggleSetupField(acc.id, s.massdmF, !!(dash as any)?.[s.massdmF])}
-                                  />
-                                  {/* Feed Posting Folder (derived) */}
-                                  <CellCheck done={s.feedFolderDone} auto={s.feedFolderDone} disabled />
-                                  {/* Feed Bot Post (derived from acc.post) */}
-                                  <CellCheck
-                                    done={s.feedBotDone}
-                                    auto={s.feedBotDone}
-                                    onToggle={() => updateAccountField(acc.id, { post: !acc.post })}
-                                  />
+                                   {/* Bot DM — Indikator (nicht klickbar): gold = Hauptnachricht gesetzt, grün = Bot aktiv */}
+                                   <CellCheck
+                                     done={s.botdmState !== "none"}
+                                     tone={s.botdmState === "done" ? "emerald" : "gold"}
+                                     title={
+                                       s.botdmState === "done"
+                                         ? "Bot aktiv (Nachrichten-Switch ON)"
+                                         : s.botdmState === "partial"
+                                           ? "Hauptnachricht gesetzt, Bot noch nicht aktiv"
+                                           : "Keine Hauptnachricht gesetzt"
+                                     }
+                                   />
+                                   {/* Account Setup */}
+                                   <CellCheck
+                                     done={s.accountSetupDone}
+                                     onToggle={() => toggleSetupField(acc.id, s.welcomeF, s.accountSetupDone)}
+                                   />
+                                   {/* Welcome — manueller Haken pro Account */}
+                                   <CellCheck
+                                     done={s.welcomeDone}
+                                     title="Manuell setzen"
+                                     onToggle={() => updateAccountField(acc.id, { welcome_done: !s.welcomeDone } as any)}
+                                   />
+                                   {/* Feed Posting Folder (derived) */}
+                                   <CellCheck done={s.feedFolderDone} tone="emerald" title="Automatisch erkannt" />
+                                   {/* Feed Post — Indikator (nicht klickbar) */}
+                                   <CellCheck
+                                     done={s.feedBotDone}
+                                     tone="emerald"
+                                     title={s.feedBotDone ? "Feed-Posting aktiv" : "Feed-Posting aus"}
+                                   />
                                 </div>
 
 
@@ -9510,11 +9523,23 @@ export default function AdminDashboard() {
                                         <div className="flex items-center gap-2">
                                           <Switch
                                             checked={!!acc.message}
-                                            onCheckedChange={(v) => updateAccountField(acc.id, { message: v })}
+                                            disabled={!acc.main_message?.trim()}
+                                            onCheckedChange={(v) => {
+                                              if (!acc.main_message?.trim()) {
+                                                toast.error("Erst Hauptnachricht speichern");
+                                                return;
+                                              }
+                                              updateAccountField(acc.id, { message: v });
+                                            }}
                                           />
                                           <span className={`text-[11px] font-semibold ${acc.message ? "text-emerald-400" : "text-muted-foreground"}`}>
                                             {acc.message ? "ON" : "OFF"}
                                           </span>
+                                          {!acc.main_message?.trim() && (
+                                            <span className="text-[10px] text-muted-foreground/70">
+                                              Hauptnachricht fehlt
+                                            </span>
+                                          )}
                                         </div>
 
                                         <div className="flex items-center gap-2">

@@ -86,6 +86,7 @@ export type Database = {
           post: boolean
           subfolder_name: string | null
           username: string | null
+          welcome_done: boolean
         }
         Insert: {
           account_domain?: string
@@ -114,6 +115,7 @@ export type Database = {
           post?: boolean
           subfolder_name?: string | null
           username?: string | null
+          welcome_done?: boolean
         }
         Update: {
           account_domain?: string
@@ -142,6 +144,7 @@ export type Database = {
           post?: boolean
           subfolder_name?: string | null
           username?: string | null
+          welcome_done?: boolean
         }
         Relationships: [
           {
