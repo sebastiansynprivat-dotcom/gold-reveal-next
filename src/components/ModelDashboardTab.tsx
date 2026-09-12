@@ -684,6 +684,7 @@ export default function ModelDashboardTab() {
   }, [customPlatforms, selectedModelId]);
 
   const detailRef = useRef<HTMLDivElement>(null);
+  const platformAccountsRef = useRef<HTMLDivElement>(null);
 
   // ─── Load models ───
   const loadModels = useCallback(async () => {
@@ -1932,7 +1933,10 @@ export default function ModelDashboardTab() {
           <OffboardingOverviewButton
             onSelectModel={(id) => {
               setSelectedModelId(id);
-              setTimeout(() => detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+              setTimeout(() => {
+                const target = platformAccountsRef.current || detailRef.current;
+                target?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }, 400);
             }}
           />
           <Button
@@ -4268,6 +4272,7 @@ export default function ModelDashboardTab() {
             </Section>
 
             {/* ── Ebene 2: Plattform-Accounts (Stammbaum) ── */}
+            <div ref={platformAccountsRef} className="scroll-mt-20">
             <Section icon={Globe} title="Plattform-Accounts" delay={0.15}>
               <div className="space-y-3">
                 {modelAccounts.length === 0 ? (
@@ -4550,6 +4555,7 @@ export default function ModelDashboardTab() {
                 )}
               </div>
             </Section>
+            </div>
 
             {/* ── Auszahlung ── */}
             <Section icon={Wallet} title="Auszahlung" delay={0.2}>
