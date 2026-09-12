@@ -9225,43 +9225,51 @@ export default function AdminDashboard() {
                             const s = computeStates(acc);
                             const isExpanded = expandedBot === acc.id;
 
-                            const CellCheck = ({
-                              done,
-                              auto,
-                              onToggle,
-                              disabled,
-                            }: {
-                              done: boolean;
-                              auto?: boolean;
-                              onToggle?: () => void;
-                              disabled?: boolean;
-                            }) => (
-                              <div
-                                className="flex justify-center py-2"
-                                onClick={(e) => e.stopPropagation()}
-                                title={auto ? "Automatisch erkannt" : undefined}
-                              >
-                                <button
-                                  onClick={() => !disabled && onToggle?.()}
-                                  disabled={disabled}
-                                  className={cn(
-                                    "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                    disabled && "opacity-30 cursor-not-allowed",
-                                    done
-                                      ? auto
-                                        ? "border-emerald-400 bg-emerald-400/20"
-                                        : "border-accent bg-accent/20"
-                                      : "border-muted-foreground/30 bg-transparent hover:border-accent/50",
-                                  )}
-                                >
-                                  {done && (
-                                    <CheckCircle2
-                                      className={cn("h-3 w-3", auto ? "text-emerald-400" : "text-accent")}
-                                    />
-                                  )}
-                                </button>
-                              </div>
-                            );
+                             const CellCheck = ({
+                               done,
+                               tone = "gold",
+                               onToggle,
+                               disabled,
+                               title,
+                             }: {
+                               done: boolean;
+                               tone?: "gold" | "emerald";
+                               onToggle?: () => void;
+                               disabled?: boolean;
+                               title?: string;
+                             }) => {
+                               const readOnly = disabled || !onToggle;
+                               return (
+                                 <div
+                                   className="flex justify-center py-2"
+                                   onClick={(e) => e.stopPropagation()}
+                                   title={title}
+                                 >
+                                   <button
+                                     onClick={() => !readOnly && onToggle?.()}
+                                     disabled={readOnly}
+                                     className={cn(
+                                       "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                                       readOnly && "cursor-default",
+                                       done
+                                         ? tone === "emerald"
+                                           ? "border-emerald-400 bg-emerald-400/20"
+                                           : "border-accent bg-accent/20"
+                                         : cn(
+                                             "border-muted-foreground/30 bg-transparent",
+                                             !readOnly && "hover:border-accent/50",
+                                           ),
+                                     )}
+                                   >
+                                     {done && (
+                                       <CheckCircle2
+                                         className={cn("h-3 w-3", tone === "emerald" ? "text-emerald-400" : "text-accent")}
+                                       />
+                                     )}
+                                   </button>
+                                 </div>
+                               );
+                             };
 
                             return (
                               <div key={acc.id} id={`setup-row-${acc.id}`}>
