@@ -9196,7 +9196,7 @@ export default function AdminDashboard() {
                       if (setupStatusFilter !== "alle") {
                         filteredSetupAccounts = filteredSetupAccounts.filter((acc) => {
                           const s = computeStates(acc);
-                          if (setupStatusFilter === "botdm_missing") return s.hasBot && !s.botdmDone;
+                          if (setupStatusFilter === "botdm_missing") return !s.botdmDone;
                           if (setupStatusFilter === "setup_missing") return !s.accountSetupDone;
                           if (setupStatusFilter === "welcome_missing") return !s.welcomeDone;
                           if (setupStatusFilter === "feedfolder_missing") return !s.feedFolderDone;
