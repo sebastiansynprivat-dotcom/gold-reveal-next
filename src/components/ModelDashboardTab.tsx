@@ -4268,6 +4268,7 @@ export default function ModelDashboardTab() {
             </Section>
 
             {/* ── Ebene 2: Plattform-Accounts (Stammbaum) ── */}
+            <div ref={platformAccountsRef} className="scroll-mt-20">
             <Section icon={Globe} title="Plattform-Accounts" delay={0.15}>
               <div className="space-y-3">
                 {modelAccounts.length === 0 ? (
