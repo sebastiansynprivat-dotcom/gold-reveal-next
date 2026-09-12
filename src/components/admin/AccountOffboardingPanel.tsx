@@ -152,6 +152,10 @@ const AccountOffboardingPanel = ({
       toast.error("Account und Datum auswählen");
       return;
     }
+    if (date < minDate) {
+      toast.error("Stichtag muss mindestens morgen sein");
+      return;
+    }
     setSaving(true);
     const acc = accounts.find((a) => a.id === accountId);
     const { data: userRes } = await supabase.auth.getUser();
