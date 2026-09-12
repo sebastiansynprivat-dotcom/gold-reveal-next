@@ -228,6 +228,7 @@ interface ChatterProfile {
 
 import { PLATFORMS as PLATFORM_DEFS, usePlatforms } from "@/lib/platforms";
 import SteckbriefImporter from "@/components/admin/SteckbriefImporter";
+import AccountOffboardingPanel from "@/components/admin/AccountOffboardingPanel";
 
 const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 const PLATFORMS_FALLBACK = PLATFORM_DEFS.map((p) => p.label);
@@ -4512,6 +4513,20 @@ export default function ModelDashboardTab() {
                     ))}
                   </Accordion>
                   </>
+                )}
+
+                {/* ── Offboarding ── */}
+                {selectedModelId && (
+                  <AccountOffboardingPanel
+                    modelId={selectedModelId}
+                    accounts={modelAccounts.map((a) => ({
+                      id: a.id,
+                      platform: a.platform,
+                      account_email: a.account_email,
+                      username: a.username,
+                      archived: a.archived,
+                    }))}
+                  />
                 )}
 
                 {/* Add more accounts button – only if platforms available */}
