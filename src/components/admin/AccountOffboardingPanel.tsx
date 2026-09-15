@@ -48,6 +48,8 @@ const tomorrowStart = () => {
 const toYmd = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
+const ALL_VALUE = "__all__";
+
 const STATUS_LABEL: Record<string, string> = {
   scheduled: "geplant",
   running: "läuft",
@@ -157,15 +159,22 @@ const AccountOffboardingPanel = ({
       return;
     }
     setSaving(true);
-    const acc = accounts.find((a) => a.id === accountId);
+    const targets = accountId === ALL_VALUE ? selectable : activeAccounts.filter((a) => a.id === accountId);
+    if (targets.length === 0) {
+      toast.error("Keine Accounts verfügbar");
+      setSaving(false);
+      return;
+    }
     const { data: userRes } = await supabase.auth.getUser();
-    const { error } = await (supabase as any).from("account_offboardings").insert({
-      account_id: accountId,
-      model_id: modelId,
-      platform: acc?.platform ?? null,
-      target_date: toYmd(date),
-      created_by: userRes?.user?.id ?? null,
-    });
+    const { error } = await (supabase as any).from("account_offboardings").insert(
+      targets.map((a) => ({
+        account_id: a.id,
+        model_id: modelId,
+        platform: a.platform ?? null,
+        target_date: toYmd(date),
+        created_by: userRes?.user?.id ?? null,
+      })),
+    );
     if (error) {
       toast.error(`Fehler: ${error.message}`);
       setSaving(false);
@@ -175,9 +184,14 @@ const AccountOffboardingPanel = ({
     const { error: accErr } = await (supabase as any)
       .from("accounts")
       .update({ post: false, message: false })
-      .eq("id", accountId);
+      .in("id", targets.map((a) => a.id));
     if (accErr) toast.error(`Flags konnten nicht deaktiviert werden: ${accErr.message}`);
-    else toast.success("Offboarding geplant – Posting & Nachrichten deaktiviert");
+    else
+      toast.success(
+        targets.length > 1
+          ? `${targets.length} Offboardings geplant – Posting & Nachrichten deaktiviert`
+          : "Offboarding geplant – Posting & Nachrichten deaktiviert",
+      );
     setAccountId("");
     setDate(undefined);
     setSaving(false);
@@ -240,6 +254,11 @@ const AccountOffboardingPanel = ({
                 <SelectValue placeholder="Account wählen" />
               </SelectTrigger>
               <SelectContent>
+                {selectable.length > 1 && (
+                  <SelectItem value={ALL_VALUE} className="text-xs font-medium">
+                    Alle Accounts ({selectable.length})
+                  </SelectItem>
+                )}
                 {selectable.map((a) => (
                   <SelectItem key={a.id} value={a.id} className="text-xs">
                     {labelFor(a.id, a.platform)}
