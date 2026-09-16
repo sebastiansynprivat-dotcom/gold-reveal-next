@@ -112,7 +112,7 @@ const OffboardingOverviewButton = ({ onSelectModel }: { onSelectModel: (modelId:
           status: r.status,
           modelLabel: m?.username || m?.name || "Unbekanntes Model",
           accountLabel: a?.username || a?.account_email || `${String(r.account_id).slice(0, 8)}…`,
-          chatterLabel: a?.assigned_to ? chatterMap.get(a.assigned_to) || "Chatter" : null,
+          chatterLabel: a?.assigned_to ? String(chatterMap.get(a.assigned_to) || "Chatter") : null,
         };
       }),
     );
