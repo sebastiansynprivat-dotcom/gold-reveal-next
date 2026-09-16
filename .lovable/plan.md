@@ -14,6 +14,8 @@ Broken records:
 
 All three are pre-registered entries (no login account attached yet).
 
+**Who pre-registered them:** the pre-registration records themselves don't store an author, so there is no direct trace. The platform accounts linked to all three were created by **maxsandig@hotmail.de** (super admin), which is the strongest available indication. I'll add author tracking to pre-registrations as part of this work so this is answerable in future.
+
 ## What I will do
 
 1. **Fix the three records**
@@ -39,3 +41,4 @@ All three are pre-registered entries (no login account attached yet).
 - Data fix runs as an UPDATE against the three rows before the trigger is added.
 - Shared helper `sanitizeTelegramId()` in `src/lib/telegram.ts`; used by `src/pages/Dashboard.tsx` (`saveTelegram`), `src/components/admin/PreChattersDialog.tsx` (`add`), `src/pages/AdminDashboard.tsx` (chatter edit save), plus `inputMode="numeric"` and an `onChange` digit filter on those inputs.
 - Edge functions `ingest-profiles-data`, `assign-chatter-accounts`, `verify-telegram-id`, `update-controlling`, `update-chatter-presence`: normalize incoming `telegram_id` to digits and return 400 on non-numeric input.
+- Add `profiles.created_by uuid` (default `auth.uid()`) so future pre-registrations record their author; shown next to each entry in the pre-registration list.
