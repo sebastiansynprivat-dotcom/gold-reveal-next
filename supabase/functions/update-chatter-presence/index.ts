@@ -45,7 +45,10 @@ Deno.serve(async (req) => {
     return json({ error: "platform (non-empty string) is required" }, 400);
   }
 
-  const normalized = telegram_id.trim().replace(/^@/, "");
+  const normalized = telegram_id.trim().replace(/^@/, "").replace(/\s+/g, "");
+  if (!/^\d+$/.test(normalized)) {
+    return json({ error: "telegram_id must contain digits only" }, 400);
+  }
   const platformKey = platform.trim();
 
   const entry: Record<string, unknown> = { updated_at: new Date().toISOString() };

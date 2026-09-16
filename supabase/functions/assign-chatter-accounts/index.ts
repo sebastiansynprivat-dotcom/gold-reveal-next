@@ -60,7 +60,13 @@ Deno.serve(async (req) => {
     }
 
     // Find chatter by telegram_id
-    const normalizedTg = String(telegram_id).trim().replace(/^@/, "");
+    const normalizedTg = String(telegram_id).trim().replace(/^@/, "").replace(/\s+/g, "");
+    if (!/^\d+$/.test(normalizedTg)) {
+      return new Response(
+        JSON.stringify({ error: "telegram_id must contain digits only" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
     const { data: profile, error: profileErr } = await supabase
       .from("profiles")
       .select("user_id, telegram_id")
