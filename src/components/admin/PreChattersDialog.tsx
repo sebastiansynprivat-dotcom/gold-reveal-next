@@ -31,6 +31,7 @@ interface PreProfile {
   agency: "shex" | "syn";
   group_name: string;
   created_at: string;
+  created_by_name?: string | null;
   assignments: {
     id: string;
     account_id: string;
@@ -73,7 +74,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
     setLoading(true);
     const { data: profs, error } = await supabase
       .from("profiles")
-      .select("id, name, telegram_id, language, group_name, created_at, pre_create, agency")
+      .select("id, name, telegram_id, language, group_name, created_at, pre_create, agency, created_by")
       .eq("pre_create", true)
       .order("created_at", { ascending: false });
     if (error) {
@@ -98,6 +99,19 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
         });
       });
     }
+    const creatorIds = Array.from(
+      new Set((profs || []).map((p: any) => p.created_by).filter(Boolean)),
+    ) as string[];
+    let creatorNames: Record<string, string> = {};
+    if (creatorIds.length > 0) {
+      const { data: admins } = await supabase
+        .from("admin_profiles")
+        .select("user_id, display_name")
+        .in("user_id", creatorIds);
+      (admins || []).forEach((a: any) => {
+        if (a.display_name) creatorNames[a.user_id] = a.display_name;
+      });
+    }
     setList(
       (profs || []).map((p: any) => ({
         id: p.id,
@@ -107,6 +121,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
         agency: (p.agency || "shex") as "shex" | "syn",
         group_name: p.group_name || "",
         created_at: p.created_at,
+        created_by_name: p.created_by ? creatorNames[p.created_by] || null : null,
         assignments: assignmentsByProfile[p.id] || [],
       })),
     );
