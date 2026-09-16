@@ -11766,6 +11766,10 @@ export default function AdminDashboard() {
               <Button
                 onClick={async () => {
                   if (!reassignTarget) return;
+                  if (editTelegram.trim() && !isValidTelegramId(editTelegram)) {
+                    toast.error("Ungültige Telegram-ID: nur Ziffern erlaubt (mind. 5 Stellen).");
+                    return;
+                  }
                   setSavingChatter(true);
                   const hasUserId = !!reassignTarget.user_id;
                   const q = supabase
