@@ -18,7 +18,18 @@ interface Entry {
   status: string;
   modelLabel: string;
   accountLabel: string;
+  chatterLabel: string | null;
 }
+
+interface Group {
+  model_id: string;
+  modelLabel: string;
+  target_date: string;
+  statuses: string[];
+  platforms: string[];
+  chatters: { platform: string; name: string }[];
+}
+
 
 const STATUS_LABEL: Record<string, string> = {
   scheduled: "geplant",
@@ -72,12 +83,21 @@ const OffboardingOverviewButton = ({ onSelectModel }: { onSelectModel: (modelId:
         ? (supabase as any).from("models").select("id, username, name").in("id", modelIds)
         : Promise.resolve({ data: [] }),
       accountIds.length
-        ? (supabase as any).from("accounts").select("id, platform, username, account_email").in("id", accountIds)
+        ? (supabase as any)
+            .from("accounts")
+            .select("id, platform, username, account_email, assigned_to")
+            .in("id", accountIds)
         : Promise.resolve({ data: [] }),
     ]);
 
     const modelMap = new Map((models || []).map((m: any) => [m.id, m]));
     const accMap = new Map((accounts || []).map((a: any) => [a.id, a]));
+
+    const chatterIds = [...new Set((accounts || []).map((a: any) => a.assigned_to).filter(Boolean))];
+    const { data: chatters } = chatterIds.length
+      ? await (supabase as any).from("profiles").select("user_id, name").in("user_id", chatterIds)
+      : { data: [] };
+    const chatterMap = new Map((chatters || []).map((c: any) => [c.user_id, c.name]));
 
     setEntries(
       rows.map((r) => {
@@ -92,9 +112,11 @@ const OffboardingOverviewButton = ({ onSelectModel }: { onSelectModel: (modelId:
           status: r.status,
           modelLabel: m?.username || m?.name || "Unbekanntes Model",
           accountLabel: a?.username || a?.account_email || `${String(r.account_id).slice(0, 8)}…`,
+          chatterLabel: a?.assigned_to ? String(chatterMap.get(a.assigned_to) || "Chatter") : null,
         };
       }),
     );
+
     setLoading(false);
   }, []);
 
@@ -130,49 +152,91 @@ const OffboardingOverviewButton = ({ onSelectModel }: { onSelectModel: (modelId:
         </div>
         <ScrollArea className="max-h-[320px]">
           <div className="p-2 space-y-1.5">
-            {entries.map((e) => {
-              const cd = countdownText(e.target_date, now);
-              return (
-                <button
-                  key={e.id}
-                  type="button"
-                  onClick={() => {
-                    setOpen(false);
-                    onSelectModel(e.model_id);
-                  }}
-                  className="w-full text-left rounded-lg border border-border/40 bg-secondary/20 hover:bg-accent/10 hover:border-accent/30 transition-colors p-2 space-y-1"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-medium text-foreground truncate">{e.modelLabel}</span>
-                    <span
-                      className={cn(
-                        "text-[9px] px-2 py-0.5 rounded-full border font-medium shrink-0",
-                        STATUS_STYLE[e.status] || STATUS_STYLE.scheduled,
-                      )}
-                    >
-                      {STATUS_LABEL[e.status] || e.status}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground truncate">
-                    {e.platform || "?"} · {e.accountLabel}
-                  </p>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                      <Timer className="h-3 w-3" />
-                      {formatDate(new Date(`${e.target_date}T00:00:00`), "dd.MM.yyyy", { locale: de })}
-                    </span>
-                    {cd ? (
-                      <span className="text-[10px] text-muted-foreground font-mono">{cd}</span>
-                    ) : (
-                      <span className="text-[10px] text-amber-500 font-medium flex items-center gap-1">
-                        <AlertTriangle className="h-3 w-3" />
-                        Termin erreicht
+            {(() => {
+              const map = new Map<string, Group>();
+              entries.forEach((e) => {
+                const key = `${e.model_id}_${e.target_date}`;
+                const g = map.get(key) || {
+                  model_id: e.model_id,
+                  modelLabel: e.modelLabel,
+                  target_date: e.target_date,
+                  statuses: [],
+                  platforms: [],
+                  chatters: [],
+                };
+                if (!g.statuses.includes(e.status)) g.statuses.push(e.status);
+                const plat = e.platform || "?";
+                if (!g.platforms.includes(plat)) g.platforms.push(plat);
+                if (e.chatterLabel) g.chatters.push({ platform: plat, name: e.chatterLabel });
+                map.set(key, g);
+              });
+              const groups = [...map.values()].sort((a, b) => a.target_date.localeCompare(b.target_date));
+
+              return groups.map((g) => {
+                const cd = countdownText(g.target_date, now);
+                const status = g.statuses.includes("failed")
+                  ? "failed"
+                  : g.statuses.includes("running")
+                    ? "running"
+                    : "scheduled";
+                const diff = new Date(`${g.target_date}T00:00:00`).getTime() - now;
+                const urgent = diff < 3 * 86_400_000;
+                const showChatterWarning = urgent && g.chatters.length > 0;
+                return (
+                  <button
+                    key={`${g.model_id}_${g.target_date}`}
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      onSelectModel(g.model_id);
+                    }}
+                    className="w-full text-left rounded-lg border border-border/40 bg-secondary/20 hover:bg-accent/10 hover:border-accent/30 transition-colors p-2 space-y-1"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-medium text-foreground truncate">{g.modelLabel}</span>
+                      <span
+                        className={cn(
+                          "text-[9px] px-2 py-0.5 rounded-full border font-medium shrink-0",
+                          STATUS_STYLE[status] || STATUS_STYLE.scheduled,
+                        )}
+                      >
+                        {STATUS_LABEL[status] || status}
                       </span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground truncate">
+                      {g.platforms.join(" · ")}
+                      {g.platforms.length > 1 && (
+                        <span className="text-muted-foreground/70"> ({g.platforms.length} Accounts)</span>
+                      )}
+                    </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <Timer className="h-3 w-3" />
+                        {formatDate(new Date(`${g.target_date}T00:00:00`), "dd.MM.yyyy", { locale: de })}
+                      </span>
+                      {cd ? (
+                        <span className="text-[10px] text-muted-foreground font-mono">{cd}</span>
+                      ) : (
+                        <span className="text-[10px] text-amber-500 font-medium flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          Termin erreicht
+                        </span>
+                      )}
+                    </div>
+                    {showChatterWarning && (
+                      <div className="rounded-md border border-destructive/40 bg-destructive/10 px-2 py-1.5 flex items-start gap-1.5">
+                        <AlertTriangle className="h-3 w-3 text-destructive shrink-0 mt-0.5" />
+                        <p className="text-[10px] text-destructive leading-snug">
+                          Achtung: hier ist noch ein Chatter zugewiesen – bitte wechseln (
+                          {g.chatters.map((c) => `${c.name} · ${c.platform}`).join(", ")})
+                        </p>
+                      </div>
                     )}
-                  </div>
-                </button>
-              );
-            })}
+                  </button>
+                );
+              });
+            })()}
+
           </div>
         </ScrollArea>
       </PopoverContent>
