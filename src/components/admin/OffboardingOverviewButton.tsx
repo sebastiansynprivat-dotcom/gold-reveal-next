@@ -83,12 +83,21 @@ const OffboardingOverviewButton = ({ onSelectModel }: { onSelectModel: (modelId:
         ? (supabase as any).from("models").select("id, username, name").in("id", modelIds)
         : Promise.resolve({ data: [] }),
       accountIds.length
-        ? (supabase as any).from("accounts").select("id, platform, username, account_email").in("id", accountIds)
+        ? (supabase as any)
+            .from("accounts")
+            .select("id, platform, username, account_email, assigned_to")
+            .in("id", accountIds)
         : Promise.resolve({ data: [] }),
     ]);
 
     const modelMap = new Map((models || []).map((m: any) => [m.id, m]));
     const accMap = new Map((accounts || []).map((a: any) => [a.id, a]));
+
+    const chatterIds = [...new Set((accounts || []).map((a: any) => a.assigned_to).filter(Boolean))];
+    const { data: chatters } = chatterIds.length
+      ? await (supabase as any).from("profiles").select("user_id, name").in("user_id", chatterIds)
+      : { data: [] };
+    const chatterMap = new Map((chatters || []).map((c: any) => [c.user_id, c.name]));
 
     setEntries(
       rows.map((r) => {
@@ -103,9 +112,11 @@ const OffboardingOverviewButton = ({ onSelectModel }: { onSelectModel: (modelId:
           status: r.status,
           modelLabel: m?.username || m?.name || "Unbekanntes Model",
           accountLabel: a?.username || a?.account_email || `${String(r.account_id).slice(0, 8)}…`,
+          chatterLabel: a?.assigned_to ? chatterMap.get(a.assigned_to) || "Chatter" : null,
         };
       }),
     );
+
     setLoading(false);
   }, []);
 
