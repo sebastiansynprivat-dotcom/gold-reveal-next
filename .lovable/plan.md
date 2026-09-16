@@ -14,6 +14,8 @@ Broken records:
 
 All three are pre-registered entries (no login account attached yet).
 
+**Who pre-registered them:** the pre-registration records themselves don't store an author, so there is no direct trace. The platform accounts linked to all three were created by **maxsandig@hotmail.de** (super admin), which is the strongest available indication. I'll add author tracking to pre-registrations as part of this work so this is answerable in future.
+
 ## What I will do
 
 1. **Fix the three records**
