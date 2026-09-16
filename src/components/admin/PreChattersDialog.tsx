@@ -169,6 +169,10 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
       toast.error("Telegram-ID ist erforderlich");
       return;
     }
+    if (!isValidTelegramId(telegram)) {
+      toast.error("Ungültige Telegram-ID: nur Ziffern erlaubt (mind. 5 Stellen).");
+      return;
+    }
     setSaving(true);
     try {
       // 0) Guard: there must not already be ANY profile (real OR pre-create) with a
@@ -311,10 +315,12 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                 <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Telegram-ID *</label>
                 <Input
                   value={telegram}
-                  onChange={(e) => setTelegram(e.target.value)}
-                  placeholder="Telegram-ID"
+                  onChange={(e) => setTelegram(sanitizeTelegramId(e.target.value))}
+                  inputMode="numeric"
+                  placeholder="nur Ziffern, z.B. 6386881027"
                   className="h-8 text-xs bg-secondary/30 border-transparent"
                 />
+                <p className="text-[10px] text-muted-foreground/70">Telegram-IDs bestehen nur aus Ziffern.</p>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Sprache</label>
