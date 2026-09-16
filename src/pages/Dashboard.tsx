@@ -667,12 +667,12 @@ export default function Dashboard() {
   }, [user, isPwaInstalled]);
   const saveTelegram = async () => {
     if (!user) return;
-    const trimmed = telegramId.trim();
-    const digitCount = (trimmed.match(/\d/g) || []).length;
-    if (digitCount < 7) {
+    const trimmed = sanitizeTelegramId(telegramId);
+    if (!isValidTelegramId(trimmed)) {
       setTelegramHelpOpen(true);
       return;
     }
+    setTelegramId(trimmed);
     // Proactively claim any pre-create profile that already owns this
     // telegram_id BEFORE we try to upsert – avoids the unique-index race
     // for users whose auth profile row doesn't exist yet.
@@ -1063,7 +1063,8 @@ export default function Dashboard() {
                   <div className="flex items-center gap-1.5">
                     <Input
                       value={telegramId}
-                      onChange={(e) => { setTelegramId(e.target.value); setTelegramSaved(false); }}
+                      onChange={(e) => { setTelegramId(sanitizeTelegramId(e.target.value)); setTelegramSaved(false); }}
+                      inputMode="numeric"
                       onKeyDown={(e) => { if (e.key === "Enter" && telegramId.trim()) saveTelegram(); }}
                       placeholder="Telegram ID"
                       className="h-9 pl-9 pr-3 rounded-full bg-secondary/60 border-border text-sm"
@@ -1202,7 +1203,8 @@ export default function Dashboard() {
                     <MessageSquare className="h-3.5 w-3.5 text-accent shrink-0" />
                     <Input
                       value={telegramId}
-                      onChange={(e) => { setTelegramId(e.target.value); setTelegramSaved(false); }}
+                      onChange={(e) => { setTelegramId(sanitizeTelegramId(e.target.value)); setTelegramSaved(false); }}
+                      inputMode="numeric"
                       onKeyDown={(e) => { if (e.key === "Enter" && telegramId.trim()) saveTelegram(); }}
                       placeholder="Telegram ID"
                       className="h-7 text-xs flex-1 min-w-0"
