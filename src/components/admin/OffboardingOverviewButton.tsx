@@ -18,7 +18,18 @@ interface Entry {
   status: string;
   modelLabel: string;
   accountLabel: string;
+  chatterLabel: string | null;
 }
+
+interface Group {
+  model_id: string;
+  modelLabel: string;
+  target_date: string;
+  statuses: string[];
+  platforms: string[];
+  chatters: { platform: string; name: string }[];
+}
+
 
 const STATUS_LABEL: Record<string, string> = {
   scheduled: "geplant",
