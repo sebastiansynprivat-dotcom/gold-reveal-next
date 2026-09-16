@@ -35,7 +35,10 @@ Deno.serve(async (req) => {
     return json({ error: "telegram_id (non-empty string) is required" }, 400);
   }
 
-  const normalized = raw.trim().replace(/^@/, "");
+  const normalized = raw.trim().replace(/^@/, "").replace(/\s+/g, "");
+  if (!/^\d+$/.test(normalized)) {
+    return json({ error: "telegram_id must contain digits only" }, 400);
+  }
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,

@@ -46,8 +46,12 @@ Deno.serve(async (req) => {
       const r = rawRows[i] as Record<string, unknown>;
       if (!r || typeof r !== "object") return json({ error: `Row ${i}: must be an object` }, 400);
 
-      const telegram_id = typeof r.telegram_id === "string" ? r.telegram_id.trim() : "";
-      if (!telegram_id) return json({ error: `Row ${i}: telegram_id required` }, 400);
+      const rawTelegram = typeof r.telegram_id === "string" ? r.telegram_id.trim() : "";
+      if (!rawTelegram) return json({ error: `Row ${i}: telegram_id required` }, 400);
+      const telegram_id = rawTelegram.replace(/^@/, "").replace(/\s+/g, "");
+      if (!/^\d+$/.test(telegram_id)) {
+        return json({ error: `Row ${i}: telegram_id must contain digits only` }, 400);
+      }
 
       const date = typeof r.date === "string" ? r.date.trim() : "";
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json({ error: `Row ${i}: date must be YYYY-MM-DD` }, 400);

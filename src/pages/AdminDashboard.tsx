@@ -119,6 +119,7 @@ import GoldParticles from "@/components/GoldParticles";
 import SubAdminManager from "@/components/SubAdminManager";
 import SubAdminDetailView from "@/components/admin/SubAdminDetailView";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { sanitizeTelegramId, isValidTelegramId } from "@/lib/telegram";
 
 import { DeferredChart, ChartSkeleton } from "@/components/admin/DeferredChart";
 
@@ -11734,8 +11735,9 @@ export default function AdminDashboard() {
                   <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Telegram-ID</label>
                   <Input
                     value={editTelegram}
-                    onChange={(e) => setEditTelegram(e.target.value)}
-                    placeholder="@username"
+                    onChange={(e) => setEditTelegram(sanitizeTelegramId(e.target.value))}
+                    inputMode="numeric"
+                    placeholder="nur Ziffern"
                     className="h-8 text-xs bg-secondary/30 border-transparent"
                   />
                 </div>
@@ -11764,6 +11766,10 @@ export default function AdminDashboard() {
               <Button
                 onClick={async () => {
                   if (!reassignTarget) return;
+                  if (editTelegram.trim() && !isValidTelegramId(editTelegram)) {
+                    toast.error("Ungültige Telegram-ID: nur Ziffern erlaubt (mind. 5 Stellen).");
+                    return;
+                  }
                   setSavingChatter(true);
                   const hasUserId = !!reassignTarget.user_id;
                   const q = supabase

@@ -3008,6 +3008,7 @@ export type Database = {
           agency: string
           billing_unlock_override: boolean
           created_at: string
+          created_by: string | null
           daily_goal: number
           end_date: string | null
           group_name: string
@@ -3032,6 +3033,7 @@ export type Database = {
           agency?: string
           billing_unlock_override?: boolean
           created_at?: string
+          created_by?: string | null
           daily_goal?: number
           end_date?: string | null
           group_name?: string
@@ -3056,6 +3058,7 @@ export type Database = {
           agency?: string
           billing_unlock_override?: boolean
           created_at?: string
+          created_by?: string | null
           daily_goal?: number
           end_date?: string | null
           group_name?: string
