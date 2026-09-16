@@ -564,6 +564,11 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                       <p className="text-xs font-medium text-foreground truncate">
                         {pc.name || pc.group_name || "—"} · {pc.telegram_id}
                       </p>
+                      {pc.created_by_name && (
+                        <p className="text-[10px] text-muted-foreground/70">
+                          angelegt von {pc.created_by_name}
+                        </p>
+                      )}
                       {accs.length > 0 && (
                         <div className="mt-1.5 flex flex-wrap gap-1">
                           {accs.map((a, i) => (
