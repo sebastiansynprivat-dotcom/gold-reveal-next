@@ -112,6 +112,7 @@ import InspirationLibrary from "@/components/InspirationLibrary";
 import ThirtyDayChallenge from "@/components/ThirtyDayChallenge";
 import DashboardOnboarding from "@/components/DashboardOnboarding";
 import { highlightSection } from "@/lib/sectionHighlight";
+import { sanitizeTelegramId, isValidTelegramId } from "@/lib/telegram";
 
 
 // Streak helper (mirrors StreakTracker logic)
