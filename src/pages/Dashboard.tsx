@@ -1093,7 +1093,10 @@ export default function Dashboard() {
                   const f = freshnessInfo(dataFreshness, lang);
                   if (!f) return null;
                   return (
-                    <p className={`text-[9px] leading-none mt-0.5 ${f.stale ? "text-accent" : "text-muted-foreground"}`}>
+                    <p
+                      title={f.title}
+                      className={`text-[9px] leading-none mt-0.5 ${f.stale ? "text-accent" : "text-muted-foreground"}`}
+                    >
                       {f.label}
                     </p>
                   );
