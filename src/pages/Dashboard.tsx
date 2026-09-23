@@ -1234,7 +1234,10 @@ export default function Dashboard() {
                   const f = freshnessInfo(dataFreshness, lang);
                   if (!f) return null;
                   return (
-                    <span className={`text-[9px] leading-none ${f.stale ? "text-accent" : "text-muted-foreground"}`}>
+                    <span
+                      title={f.title}
+                      className={`text-[9px] leading-none text-right ${f.stale ? "text-accent" : "text-muted-foreground"}`}
+                    >
                       {f.label}
                     </span>
                   );
