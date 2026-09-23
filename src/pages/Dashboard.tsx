@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
-/** Data-freshness label for today's ingested revenue. Stale = older than 3h. */
-const STALE_AFTER_MS = 3 * 60 * 60 * 1000;
+/** Data-freshness label for today's ingested revenue. Stale = older than 90min. */
+const STALE_AFTER_MS = 90 * 60 * 1000;
 function freshnessInfo(ts: Date | null, lang: string) {
   if (!ts) return null;
   const time = ts.toLocaleTimeString(lang === "en" ? "en-GB" : "de-DE", {
@@ -13,11 +13,14 @@ function freshnessInfo(ts: Date | null, lang: string) {
     stale,
     label: stale
       ? lang === "en"
-        ? `Updating – as of ${time}`
-        : `Daten werden aktualisiert – Stand ${time}`
+        ? `Sales may be missing – as of ${time}`
+        : `Verkäufe können noch fehlen – Stand ${time}`
       : lang === "en"
         ? `As of ${time}`
         : `Stand ${time}`,
+    title: lang === "en"
+      ? "Revenue is shown net of the platform fee and is delivered by the platform bot in batches, so the newest sales can appear with a delay."
+      : "Umsätze werden netto nach Plattformgebühr angezeigt und vom Plattform-Bot in Schüben geliefert – die neuesten Verkäufe können daher verzögert erscheinen.",
   };
 }
 import { useSearchParams, useNavigate } from "react-router-dom";
@@ -1090,7 +1093,10 @@ export default function Dashboard() {
                   const f = freshnessInfo(dataFreshness, lang);
                   if (!f) return null;
                   return (
-                    <p className={`text-[9px] leading-none mt-0.5 ${f.stale ? "text-accent" : "text-muted-foreground"}`}>
+                    <p
+                      title={f.title}
+                      className={`text-[9px] leading-none mt-0.5 ${f.stale ? "text-accent" : "text-muted-foreground"}`}
+                    >
                       {f.label}
                     </p>
                   );
@@ -1228,7 +1234,10 @@ export default function Dashboard() {
                   const f = freshnessInfo(dataFreshness, lang);
                   if (!f) return null;
                   return (
-                    <span className={`text-[9px] leading-none ${f.stale ? "text-accent" : "text-muted-foreground"}`}>
+                    <span
+                      title={f.title}
+                      className={`text-[9px] leading-none text-right ${f.stale ? "text-accent" : "text-muted-foreground"}`}
+                    >
                       {f.label}
                     </span>
                   );
