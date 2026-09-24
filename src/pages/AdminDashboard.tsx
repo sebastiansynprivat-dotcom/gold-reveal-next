@@ -114,6 +114,8 @@ import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
 import ModelDashboardTab from "@/components/ModelDashboardTab";
 import ChatterDashboardTab from "@/components/ChatterDashboardTab";
 import DeletedRecordsTab from "@/components/admin/DeletedRecordsTab";
+import OffboardingTab from "@/components/admin/OffboardingTab";
+import { LogOut as LogOutIcon } from "lucide-react";
 import ContentDropDialog from "@/components/admin/ContentDropDialog";
 import GoldParticles from "@/components/GoldParticles";
 import SubAdminManager from "@/components/SubAdminManager";
@@ -4712,7 +4714,8 @@ export default function AdminDashboard() {
         if (!assignmentsLoaded) loadAssignments();
       },
     },
-    { key: "platzhalter" as const, label: "Model-Dashboard", icon: Star, onClick: () => setActiveTab("platzhalter") },
+    { key: "platzhalter" as const, label: "Model-Dashboard", icon: Star, onClick: () => { setOffboardingModelId(null); setActiveTab("platzhalter"); } },
+    { key: "offboarding" as const, label: "Offboarding", icon: LogOut, onClick: () => setActiveTab("offboarding") },
     {
       key: "chatter_dash" as const,
       label: "Mitarbeiter-Dashboard",
@@ -10458,7 +10461,15 @@ export default function AdminDashboard() {
                 <ChatterReportsTab chatters={chatters} />
               )}
 
-              {activeTab === "platzhalter" && <ModelDashboardTab />}
+              {activeTab === "platzhalter" && <ModelDashboardTab key={offboardingModelId || "md"} initialModelId={offboardingModelId || undefined} />}
+              {activeTab === "offboarding" && (
+                <OffboardingTab
+                  onOpenModel={(id) => {
+                    setOffboardingModelId(id);
+                    setActiveTab("platzhalter");
+                  }}
+                />
+              )}
 
               {activeTab === "chatter_dash" && (
                 <ChatterDashboardTab

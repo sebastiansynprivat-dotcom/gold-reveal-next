@@ -319,7 +319,7 @@ const platformColors: Record<string, string> = {
 };
 
 // ─── Main Component ───
-export default function ModelDashboardTab() {
+export default function ModelDashboardTab({ initialModelId }: { initialModelId?: string } = {}) {
   // Reactive platform list — updates automatically when platforms are activated/deactivated in Setup
   const platformDefs = usePlatforms();
   const PLATFORMS = useMemo(
@@ -328,7 +328,7 @@ export default function ModelDashboardTab() {
   );
   // Models
   const [models, setModels] = useState<ModelRow[]>([]);
-  const [selectedModelId, setSelectedModelId] = useState<string>("");
+  const [selectedModelId, setSelectedModelId] = useState<string>(initialModelId || "");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
