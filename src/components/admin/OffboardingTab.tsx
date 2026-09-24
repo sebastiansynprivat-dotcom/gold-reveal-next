@@ -174,6 +174,19 @@ const OffboardingTab = ({ onOpenModel, initialOpenId }: { onOpenModel: (modelId:
     load();
   };
 
+  const [recovering, setRecovering] = useState<string | null>(null);
+  const recover = async (id: string) => {
+    setRecovering(id);
+    const { data, error } = await supabase.functions.invoke("process-offboardings", { body: { offboarding_id: id } });
+    setRecovering(null);
+    if (error) return toast.error(`Fehler: ${error.message}`);
+    const res = data?.results?.[0];
+    if (res?.error) toast.error(res.error);
+    else if (res?.saved) toast.success(`${res.saved} Beleg(e) gesichert`);
+    else toast.info(res?.note || "Keine neuen Belege verfügbar");
+    load();
+  };
+
   const download = async (file: FileRow, plat: string | null) => {
     setDownloading(file.id);
     try {
@@ -344,6 +357,9 @@ const OffboardingTab = ({ onOpenModel, initialOpenId }: { onOpenModel: (modelId:
                   </div>
 
                   <div className="flex gap-2 flex-wrap">
+                    <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" disabled={recovering === r.id} onClick={() => recover(r.id)}>
+                      {recovering === r.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />} Belege nachladen
+                    </Button>
                     {r.model_id && (
                       <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={() => onOpenModel(r.model_id!)}>
                         <ExternalLink className="h-3.5 w-3.5" /> Model-Karte öffnen
