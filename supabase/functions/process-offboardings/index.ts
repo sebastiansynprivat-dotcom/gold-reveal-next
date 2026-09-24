@@ -74,6 +74,8 @@ async function collectStatements(admin: any, backendUrl: string, token: string, 
         : Array.isArray(result?.statements) ? result.statements
         : Array.isArray(result?.payoutStatements) ? result.payoutStatements : [];
       received = statements.length;
+      const errs: any[] = Array.isArray(result?.errors) ? result.errors : [];
+      if (errs.length && statements.length === 0) backendHalt = errs.map((e) => `${e.code || 'ERROR'}: ${e.message || ''}`).join('; ').slice(0, 300);
       console.log("statements response", account.id, account.platform, "received", received, JSON.stringify(result).slice(0, 500));
       for (const st of statements) {
         const period = String(st?.period || "").slice(0, 7);
