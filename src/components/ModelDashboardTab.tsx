@@ -328,6 +328,16 @@ export default function ModelDashboardTab({ initialModelId }: { initialModelId?:
   // Models
   const [models, setModels] = useState<ModelRow[]>([]);
   const [selectedModelId, setSelectedModelId] = useState<string>(initialModelId || "");
+  const [offboardingModelIds, setOffboardingModelIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    (supabase as any)
+      .from("account_offboardings")
+      .select("model_id")
+      .neq("status", "done")
+      .then(({ data }: any) =>
+        setOffboardingModelIds(new Set((data || []).map((r: any) => r.model_id).filter(Boolean))),
+      );
+  }, []);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
@@ -2320,6 +2330,15 @@ export default function ModelDashboardTab({ initialModelId }: { initialModelId?:
                             </span>
                           );
                         })()}
+                        {offboardingModelIds.has(model.id) && (
+                          <span
+                            className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-[1px] rounded border border-destructive/40 text-destructive bg-destructive/10 shrink-0"
+                            title="Mindestens ein Account wird gerade offgeboardet"
+                          >
+                            <LogOut className="h-2.5 w-2.5" />
+                            Offboarding
+                          </span>
+                        )}
                         {duplicateModelIds.has(model.id) && (
                           <span
                             className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-[1px] rounded border border-amber-500/40 text-amber-300 bg-amber-500/10 shrink-0"
