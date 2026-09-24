@@ -1,6 +1,6 @@
 # Offboarding section in the admin menu
 
-Add a new "Offboarding" entry to the admin sidebar (next to "Archiv (Gelöscht)") that lists every entry from the offboarding table.
+Add a new "Offboarding" entry to the admin sidebar (next to "Model-Dashboard") that lists every entry from the offboarding table.
 
 ## What you get
 
