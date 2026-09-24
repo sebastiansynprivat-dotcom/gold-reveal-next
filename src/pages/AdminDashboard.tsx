@@ -10475,6 +10475,8 @@ export default function AdminDashboard() {
               {activeTab === "platzhalter" && <ModelDashboardTab key={offboardingModelId || "md"} initialModelId={offboardingModelId || undefined} />}
               {activeTab === "offboarding" && (
                 <OffboardingTab
+                  key={offboardingFocusId || "ob"}
+                  initialOpenId={offboardingFocusId}
                   onOpenModel={(id) => {
                     setOffboardingModelId(id);
                     setActiveTab("platzhalter");
