@@ -4715,7 +4715,7 @@ export default function AdminDashboard() {
       },
     },
     { key: "platzhalter" as const, label: "Model-Dashboard", icon: Star, onClick: () => { setOffboardingModelId(null); setActiveTab("platzhalter"); } },
-    { key: "offboarding" as const, label: "Offboarding", icon: LogOut, onClick: () => setActiveTab("offboarding") },
+    { key: "offboarding" as const, label: "Offboarding", icon: LogOutIcon, onClick: () => setActiveTab("offboarding") },
     {
       key: "chatter_dash" as const,
       label: "Mitarbeiter-Dashboard",
