@@ -72,6 +72,7 @@ const OffboardingTab = ({ onOpenModel, initialOpenId }: { onOpenModel: (modelId:
   const [platform, setPlatform] = useState("all");
   const [sort, setSort] = useState<"target" | "created">("target");
   const [openId, setOpenId] = useState<string | null>(initialOpenId || null);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
@@ -142,6 +143,8 @@ const OffboardingTab = ({ onOpenModel, initialOpenId }: { onOpenModel: (modelId:
 
   useEffect(() => {
     if (!initialOpenId || rows.length === 0) return;
+    const hit = rows.find((r) => r.id === initialOpenId);
+    if (hit) setOpenGroup(hit.model_id || `label:${hit.modelLabel}`);
     document.getElementById(`offboarding-${initialOpenId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [initialOpenId, rows.length]);
 
@@ -425,7 +428,8 @@ const OffboardingTab = ({ onOpenModel, initialOpenId }: { onOpenModel: (modelId:
           );
         })}
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
