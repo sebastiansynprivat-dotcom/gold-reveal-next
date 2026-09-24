@@ -229,7 +229,6 @@ interface ChatterProfile {
 import { PLATFORMS as PLATFORM_DEFS, usePlatforms } from "@/lib/platforms";
 import SteckbriefImporter from "@/components/admin/SteckbriefImporter";
 import AccountOffboardingPanel from "@/components/admin/AccountOffboardingPanel";
-import OffboardingOverviewButton from "@/components/admin/OffboardingOverviewButton";
 
 const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 const PLATFORMS_FALLBACK = PLATFORM_DEFS.map((p) => p.label);
@@ -1930,15 +1929,6 @@ export default function ModelDashboardTab({ initialModelId }: { initialModelId?:
           <p className="text-xs text-muted-foreground">{models.length} Models registriert</p>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <OffboardingOverviewButton
-            onSelectModel={(id) => {
-              setSelectedModelId(id);
-              setTimeout(() => {
-                const target = platformAccountsRef.current || detailRef.current;
-                target?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }, 400);
-            }}
-          />
           <Button
             onClick={() => setGroupsPanelOpen(true)}
             size="sm"
