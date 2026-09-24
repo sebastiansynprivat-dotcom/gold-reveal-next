@@ -2784,8 +2784,8 @@ function DashboardBillingInfo({
                   <p className="text-lg font-bold text-gold-gradient">{nlFmt(payout || 0)} €</p>
                 </div>
               </div>
-              <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Das ist der Betrag, den du für <span className="capitalize">{monthLabel}</span> ungefähr in Rechnung stellen kannst.
+              <p className="text-[11px] text-destructive leading-relaxed">
+                <strong>ACHTUNG!</strong> Diese Zahlen können von deiner Abrechnung abweichen. Dies dient nur zur ungefähren Orientierung und die korrekten Zahlen bekommst du <strong>IMMER</strong> und <strong>NUR</strong> von der Buchhaltung selbst!
               </p>
             </>
           )}
