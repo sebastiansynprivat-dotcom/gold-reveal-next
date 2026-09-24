@@ -940,11 +940,21 @@ export default function AdminDashboard() {
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
   const [expandedFormer, setExpandedFormer] = useState<Record<string, boolean>>({});
   const [offboardingModelId, setOffboardingModelId] = useState<string | null>(null);
+  const [offboardingFocusId, setOffboardingFocusId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>(() => {
     if (typeof window === "undefined") return "einnahmen";
     const t = new URLSearchParams(window.location.search).get("tab");
     return t || "einnahmen";
   });
+  useEffect(() => {
+    const h = (e: Event) => {
+      setOffboardingFocusId((e as CustomEvent).detail?.id || null);
+      setActiveTab("offboarding");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+    window.addEventListener("open-offboarding", h);
+    return () => window.removeEventListener("open-offboarding", h);
+  }, []);
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("admin_sidebar_collapsed") === "1";
@@ -10465,6 +10475,8 @@ export default function AdminDashboard() {
               {activeTab === "platzhalter" && <ModelDashboardTab key={offboardingModelId || "md"} initialModelId={offboardingModelId || undefined} />}
               {activeTab === "offboarding" && (
                 <OffboardingTab
+                  key={offboardingFocusId || "ob"}
+                  initialOpenId={offboardingFocusId}
                   onOpenModel={(id) => {
                     setOffboardingModelId(id);
                     setActiveTab("platzhalter");

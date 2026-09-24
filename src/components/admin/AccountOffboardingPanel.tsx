@@ -310,8 +310,11 @@ const AccountOffboardingPanel = ({
             return (
               <div
                 key={row.id}
+                role="button"
+                title="Im Offboarding-Bereich öffnen"
+                onClick={() => window.dispatchEvent(new CustomEvent("open-offboarding", { detail: { id: row.id } }))}
                 className={cn(
-                  "rounded-lg border p-2.5 space-y-2",
+                  "rounded-lg border p-2.5 space-y-2 cursor-pointer hover:border-accent/50 transition-colors",
                   isDone ? "border-border/30 bg-secondary/10 opacity-60" : "border-accent/25 bg-accent/5",
                 )}
               >
@@ -361,7 +364,7 @@ const AccountOffboardingPanel = ({
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => cancel(row.id)}
+                      onClick={(e) => { e.stopPropagation(); cancel(row.id); }}
                       className="h-7 text-[10px] gap-1 text-destructive hover:bg-destructive/10 shrink-0"
                     >
                       <X className="h-3 w-3" />
@@ -378,7 +381,7 @@ const AccountOffboardingPanel = ({
                         size="sm"
                         variant="outline"
                         disabled={downloading === f.id}
-                        onClick={() => download(f, row.platform)}
+                        onClick={(e) => { e.stopPropagation(); download(f, row.platform); }}
                         className="h-6 text-[10px] gap-1 px-2"
                       >
                         {downloading === f.id ? (

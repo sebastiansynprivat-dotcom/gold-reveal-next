@@ -63,7 +63,7 @@ const countdown = (target: string, now: number) => {
   };
 };
 
-const OffboardingTab = ({ onOpenModel }: { onOpenModel: (modelId: string) => void }) => {
+const OffboardingTab = ({ onOpenModel, initialOpenId }: { onOpenModel: (modelId: string) => void; initialOpenId?: string | null }) => {
   const [rows, setRows] = useState<Row[]>([]);
   const [files, setFiles] = useState<FileRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -71,7 +71,7 @@ const OffboardingTab = ({ onOpenModel }: { onOpenModel: (modelId: string) => voi
   const [status, setStatus] = useState("all");
   const [platform, setPlatform] = useState("all");
   const [sort, setSort] = useState<"target" | "created">("target");
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(initialOpenId || null);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
@@ -139,6 +139,11 @@ const OffboardingTab = ({ onOpenModel }: { onOpenModel: (modelId: string) => voi
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!initialOpenId || rows.length === 0) return;
+    document.getElementById(`offboarding-${initialOpenId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [initialOpenId, rows.length]);
 
   const platforms = useMemo(
     () => [...new Set(rows.map((r) => r.platform).filter(Boolean) as string[])].sort(),
@@ -251,6 +256,7 @@ const OffboardingTab = ({ onOpenModel }: { onOpenModel: (modelId: string) => voi
           return (
             <div
               key={r.id}
+              id={`offboarding-${r.id}`}
               className={cn(
                 "rounded-lg border transition-colors",
                 isDone ? "border-border/30 bg-secondary/10" : "border-accent/25 bg-accent/5",
