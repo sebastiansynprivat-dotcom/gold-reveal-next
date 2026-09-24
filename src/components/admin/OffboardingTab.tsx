@@ -72,6 +72,7 @@ const OffboardingTab = ({ onOpenModel, initialOpenId }: { onOpenModel: (modelId:
   const [platform, setPlatform] = useState("all");
   const [sort, setSort] = useState<"target" | "created">("target");
   const [openId, setOpenId] = useState<string | null>(initialOpenId || null);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
@@ -142,6 +143,8 @@ const OffboardingTab = ({ onOpenModel, initialOpenId }: { onOpenModel: (modelId:
 
   useEffect(() => {
     if (!initialOpenId || rows.length === 0) return;
+    const hit = rows.find((r) => r.id === initialOpenId);
+    if (hit) setOpenGroup(hit.model_id || `label:${hit.modelLabel}`);
     document.getElementById(`offboarding-${initialOpenId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [initialOpenId, rows.length]);
 
@@ -270,20 +273,45 @@ const OffboardingTab = ({ onOpenModel, initialOpenId }: { onOpenModel: (modelId:
       )}
 
       <div className="space-y-4">
-        {groups.map((g) => (
-          <div key={g.key} className="rounded-xl border border-border/30 bg-secondary/5 p-2 space-y-2">
-            <div className="flex items-center gap-2 px-1 pt-1">
-              <span className="text-sm font-semibold text-foreground">{g.label}</span>
-              <span className="text-[11px] text-muted-foreground">
-                {g.rows.length} Account{g.rows.length !== 1 ? "s" : ""} · {[...new Set(g.rows.map((r) => r.platform || "?"))].join(", ")}
-              </span>
-              {g.modelId && (
-                <Button size="sm" variant="ghost" className="ml-auto h-7 text-[11px] gap-1" onClick={() => onOpenModel(g.modelId!)}>
-                  <ExternalLink className="h-3 w-3" /> Model-Karte
+        {groups.map((g) => {
+          const gOpen = openGroup === g.key;
+          const allDone = g.rows.every((r) => r.status === "done");
+          const hasError = g.rows.some((r) => r.last_error);
+          const nextDate = [...g.rows].map((r) => r.target_date).sort()[0];
+          const fileCount = files.filter((f) => g.rows.some((r) => r.account_id === f.account_id)).length;
+          return (
+          <div key={g.key} className={cn("rounded-xl border transition-colors", allDone ? "border-border/30 bg-secondary/10" : "border-accent/25 bg-accent/5", gOpen && "p-2 space-y-2")}>
+            <button type="button" onClick={() => setOpenGroup(gOpen ? null : g.key)} className="w-full text-left p-3 flex items-center gap-3">
+              <div className={cn("min-w-0 flex-1 space-y-1", allDone && "opacity-70")}>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-semibold text-foreground">{g.label}</span>
+                  {[...new Set(g.rows.map((r) => r.platform || "?"))].map((p) => (
+                    <span key={p} className="text-[10px] px-2 py-0.5 rounded-full border border-border/40 text-muted-foreground">{p}</span>
+                  ))}
+                  <span className={cn("text-[10px] px-2 py-0.5 rounded-full border font-medium", allDone ? STATUS_STYLE.done : STATUS_STYLE.scheduled)}>
+                    {allDone ? "erledigt" : "offen"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 flex-wrap text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Timer className="h-3 w-3" />
+                    {formatDate(new Date(`${nextDate}T00:00:00`), "dd.MM.yyyy", { locale: de })}
+                  </span>
+                  <span>{g.rows.length} Account{g.rows.length !== 1 ? "s" : ""}</span>
+                  <span>{fileCount} Beleg{fileCount !== 1 ? "e" : ""} gesichert</span>
+                  {hasError && <AlertTriangle className="h-3 w-3 text-destructive" />}
+                </div>
+              </div>
+              <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", gOpen && "rotate-180")} />
+            </button>
+            {gOpen && g.modelId && (
+              <div className="px-1">
+                <Button size="sm" variant="ghost" className="h-7 text-[11px] gap-1" onClick={() => onOpenModel(g.modelId!)}>
+                  <ExternalLink className="h-3 w-3" /> Model-Karte öffnen
                 </Button>
-              )}
-            </div>
-        {g.rows.map((r) => {
+              </div>
+            )}
+        {gOpen && g.rows.map((r) => {
           const rf = files.filter((f) => f.account_id === r.account_id);
           const isDone = r.status === "done";
           const cd = countdown(r.target_date, now);
@@ -400,7 +428,8 @@ const OffboardingTab = ({ onOpenModel, initialOpenId }: { onOpenModel: (modelId:
           );
         })}
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
