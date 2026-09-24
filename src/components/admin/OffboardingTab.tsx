@@ -167,6 +167,16 @@ const OffboardingTab = ({ onOpenModel, initialOpenId }: { onOpenModel: (modelId:
       );
   }, [rows, q, status, platform, sort]);
 
+  const groups = useMemo(() => {
+    const map = new Map<string, { key: string; label: string; modelId: string | null; rows: Row[] }>();
+    for (const r of filtered) {
+      const key = r.model_id || `label:${r.modelLabel}`;
+      if (!map.has(key)) map.set(key, { key, label: r.modelLabel, modelId: r.model_id, rows: [] });
+      map.get(key)!.rows.push(r);
+    }
+    return [...map.values()];
+  }, [filtered]);
+
   const cancel = async (id: string) => {
     const { error } = await (supabase as any).from("account_offboardings").delete().eq("id", id);
     if (error) return toast.error(`Fehler: ${error.message}`);
@@ -259,8 +269,21 @@ const OffboardingTab = ({ onOpenModel, initialOpenId }: { onOpenModel: (modelId:
         <p className="text-sm text-muted-foreground py-8 text-center">Keine Offboardings gefunden.</p>
       )}
 
-      <div className="space-y-2">
-        {filtered.map((r) => {
+      <div className="space-y-4">
+        {groups.map((g) => (
+          <div key={g.key} className="rounded-xl border border-border/30 bg-secondary/5 p-2 space-y-2">
+            <div className="flex items-center gap-2 px-1 pt-1">
+              <span className="text-sm font-semibold text-foreground">{g.label}</span>
+              <span className="text-[11px] text-muted-foreground">
+                {g.rows.length} Account{g.rows.length !== 1 ? "s" : ""} · {[...new Set(g.rows.map((r) => r.platform || "?"))].join(", ")}
+              </span>
+              {g.modelId && (
+                <Button size="sm" variant="ghost" className="ml-auto h-7 text-[11px] gap-1" onClick={() => onOpenModel(g.modelId!)}>
+                  <ExternalLink className="h-3 w-3" /> Model-Karte
+                </Button>
+              )}
+            </div>
+        {g.rows.map((r) => {
           const rf = files.filter((f) => f.account_id === r.account_id);
           const isDone = r.status === "done";
           const cd = countdown(r.target_date, now);
@@ -376,6 +399,8 @@ const OffboardingTab = ({ onOpenModel, initialOpenId }: { onOpenModel: (modelId:
             </div>
           );
         })}
+          </div>
+        ))}
       </div>
     </div>
   );
