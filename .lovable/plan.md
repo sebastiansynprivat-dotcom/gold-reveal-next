@@ -4,9 +4,16 @@
 
 The 8 archived accounts (amateurshe, belen, jateen, lysa, magic-mia, marketkaaaof, mayasinn, spicyvictoria) have **21 rows** in `accounts_data` (some accounts have multiple rows — daily snapshots from the ingest job).
 
+## Revenue table trace (requested)
+
+- **payout_revenue**: keyed by `model_id`. Zero rows exist for the 8 affected models — nothing to delete.
+- **daily_revenue**: keyed by chatter `user_id`, not by account. None of the 8 accounts ever had a chatter assigned (`assigned_to` was NULL), so no chatter revenue rows can belong to them — nothing to delete.
+
+So the only leftover data is in `accounts_data`.
+
 ## Important consequence
 
-The model dashboard's "Earnings" view reads from `accounts_data`. Deleting these rows means the earnings history of these 8 accounts will no longer appear in the respective model dashboards. The revenue figures themselves also live in `daily_revenue` / `payout_revenue`, which stay untouched — but the per-account earnings breakdown for these accounts disappears.
+The model dashboard's "Earnings" view reads from `accounts_data`. Deleting these rows means the earnings history of these 8 accounts will no longer appear in the respective model dashboards.
 
 ## What happens
 
